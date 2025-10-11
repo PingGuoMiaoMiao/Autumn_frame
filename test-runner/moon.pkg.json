@@ -1,0 +1,13 @@
+{
+  "is-main": true,
+  "import": [
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-Ioc",
+      "alias": "Autumn_Ioc"
+    },
+    {
+      "path": "moonbitlang/x/fs",
+      "alias": "fs"
+    }
+  ]
+}
