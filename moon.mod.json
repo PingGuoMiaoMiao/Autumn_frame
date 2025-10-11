@@ -1,6 +1,11 @@
 {
   "name": "username/Autumn_frame",
   "version": "0.1.0",
+  "deps": {
+    "moonbitlang/x": "0.4.34",
+    "moonbitlang/async": "0.9.0",
+    "Yoorkin/ArgParser": "0.1.11"
+  },
   "readme": "README.mbt.md",
   "repository": "",
   "license": "Apache-2.0",
