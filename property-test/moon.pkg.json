@@ -1,0 +1,9 @@
+{
+  "is-main": true,
+  "import": [
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-Ioc/PropertyResolver",
+      "alias": "PropertyResolver"
+    }
+  ]
+}
