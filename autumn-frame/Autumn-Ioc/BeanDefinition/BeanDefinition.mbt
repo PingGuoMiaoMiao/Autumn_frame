@@ -8,15 +8,17 @@
 pub enum BeanCreationType {
   Constructor // 通过构造函数创建（@Component）
   FactoryMethod(String) // 通过工厂方法创建（@Bean），参数是工厂 Bean 的名称
-}
+} derive(Eq, Show, Default, Compare)
 
 /// Bean 实例的包装（由于 Moonbit 没有 Any 类型）
 pub enum BeanInstance {
   None
   Instance(String) // 暂时用 String 表示实例的标识符
-}
+} derive(Eq, Show, Default, Compare)
 
 /// BeanDefinition - Bean 定义
+/// 
+/// 使用 derive 自动派生内建特征
 pub struct BeanDefinition {
   // === 基本信息 ===
   name : String // 全局唯一的 Bean 名称
@@ -36,7 +38,7 @@ pub struct BeanDefinition {
   // === 生命周期方法 ===
   init_method_name : String? // init 方法名称
   destroy_method_name : String? // destroy 方法名称
-}
+} derive(Eq, Compare, Show, Default)
 
 /// 创建 BeanDefinition（通过构造函数）
 pub fn BeanDefinition::new_from_constructor(
@@ -198,19 +200,8 @@ pub fn to_string(self : BeanDefinition) -> String {
   s + "]"
 }
 
-/// 实现 Show trait（用于打印）
-pub impl Show for BeanDefinition with output(self, logger) {
-  logger.write_string(self.to_string())
-}
-
-/// 实现 Compare trait（用于排序，按 order 排序）
-pub impl Eq for BeanDefinition with equal(self, other) {
-  self.name == other.name && self.bean_class == other.bean_class
-}
-
-pub impl Compare for BeanDefinition with compare(self, other) {
-  self.order.compare(other.order)
-}
+// 注意：Show 和 Compare 特征通过 derive 自动派生，不需要手动实现
+// 其他特征实现已移到 BeanTraits.mbt 文件中
 
 // ========== 测试 ==========
 
