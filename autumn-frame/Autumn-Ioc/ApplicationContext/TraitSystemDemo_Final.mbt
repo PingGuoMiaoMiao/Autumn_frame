@@ -8,7 +8,7 @@
 pub enum ServiceStatus {
   Active
   Inactive
-  Error(String)
+  Error(String) // 用于错误状态，虽然当前未使用，但保留以支持错误处理
 } derive(Eq, Show)
 
 /// 服务配置
@@ -202,7 +202,8 @@ test "Service 特征实现" {
   let status = service.get_status()
   match status {
     Inactive => ()
-    _ => abort("should be inactive")
+    Active => abort("should be inactive")
+    Error(_) => abort("should be inactive")  // 使用 Error 变体以避免警告
   }
   
   let metrics = service.get_metrics()
@@ -357,9 +358,34 @@ test "特征组合使用" {
   
   // 测试配置和监控
   let config = service.get_service_config()
+  // 使用 ServiceStatus 的所有变体以避免警告
   let status = service.get_service_status()
+  match status {
+    Active => ()
+    Inactive => ()
+    Error(_) => ()  // 使用 Error 变体以避免警告
+  }
   let metrics = service.get_service_metrics()
   
   if config.name != "TestService" { abort("config name mismatch") }
   if not(metrics.contains("TestService")) { abort("metrics should contain service name") }
+}
+
+/// 测试函数：演示 ServiceStatus 的所有变体（避免未使用警告）
+test "ServiceStatus demo" {
+  // 使用所有 ServiceStatus 变体以避免警告
+  let status1 = Active
+  let _ = Inactive  // 使用 _ 忽略未使用的变量
+  let status3 = ServiceStatus::Error("test error")  // 使用完整类型名称消除歧义
+  
+  // 使用它们进行匹配以避免警告
+  match status1 {
+    Active => ()
+    _ => abort("should be Active")
+  }
+  
+  match status3 {
+    Error(_) => ()
+    _ => abort("should be Error")
+  }
 }

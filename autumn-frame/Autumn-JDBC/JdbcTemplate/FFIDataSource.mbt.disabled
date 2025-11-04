@@ -1,0 +1,441 @@
+/// FFIDataSource - FFI 数据源实现
+/// 
+/// 通过 FFI 调用 C 数据库驱动，实现真实的数据库连接
+/// 
+/// 支持的数据库：
+/// 1. SQLite（推荐，最简单）
+/// 2. MySQL
+/// 3. PostgreSQL
+
+// ========== 导入依赖 ==========
+
+// 从 DatabaseFFI 导入 FFI 函数
+// 注意：这些函数需要在 native 后端使用
+
+// 注意：RowMapper 和 Row 类型在 RowMapper.mbt 中已定义
+// 由于此文件仅在 native 后端使用，且不在 wasm-gc 的包中，所以这里不重复定义
+
+// ========== 数据源类型 ==========
+
+/// 数据库类型
+pub enum DatabaseType {
+  Sqlite
+  Mysql
+  Postgres
+} derive(Eq, Show)
+
+/// FFI 数据源配置
+pub struct FFIDataSourceConfig {
+  db_type : DatabaseType
+  // SQLite 配置
+  sqlite_filename : String?
+  // MySQL/PostgreSQL 配置
+  host : String?
+  port : Int?
+  user : String?
+  password : String?
+  database : String?
+} derive(Eq, Show)
+
+/// 创建 SQLite 数据源配置
+pub fn FFIDataSourceConfig::sqlite(filename : String) -> FFIDataSourceConfig {
+  {
+    db_type: Sqlite,
+    sqlite_filename: Some(filename),
+    host: None,
+    port: None,
+    user: None,
+    password: None,
+    database: None
+  }
+}
+
+/// 创建 MySQL 数据源配置
+pub fn FFIDataSourceConfig::mysql(
+  host : String,
+  port : Int,
+  user : String,
+  password : String,
+  database : String
+) -> FFIDataSourceConfig {
+  {
+    db_type: Mysql,
+    sqlite_filename: None,
+    host: Some(host),
+    port: Some(port),
+    user: Some(user),
+    password: Some(password),
+    database: Some(database)
+  }
+}
+
+/// 创建 PostgreSQL 数据源配置
+pub fn FFIDataSourceConfig::postgres(
+  host : String,
+  port : Int,
+  user : String,
+  password : String,
+  database : String
+) -> FFIDataSourceConfig {
+  {
+    db_type: Postgres,
+    sqlite_filename: None,
+    host: Some(host),
+    port: Some(port),
+    user: Some(user),
+    password: Some(password),
+    database: Some(database)
+  }
+}
+
+/// FFI 数据源
+pub struct FFIDataSource {
+  config : FFIDataSourceConfig
+  sqlite_handle : Int?
+  mysql_handle : Int?
+  pg_handle : Int?
+  connected : Bool
+} derive(Eq, Show)
+
+/// 创建 FFI 数据源
+pub fn FFIDataSource::new(config : FFIDataSourceConfig) -> FFIDataSource {
+  {
+    config,
+    sqlite_handle: None,
+    mysql_handle: None,
+    pg_handle: None,
+    connected: false
+  }
+}
+
+/// 连接到数据库
+pub fn FFIDataSource::connect(
+  self : FFIDataSource
+) -> (FFIDataSource, Bool) {
+  match self.config.db_type {
+    Sqlite => {
+      match self.config.sqlite_filename {
+        Some(filename) => {
+          let handle = sqlite3_open_ffi(filename)
+          if handle >= 0 {
+            let new_ds = {
+              config: self.config,
+              sqlite_handle: Some(handle),
+              mysql_handle: self.mysql_handle,
+              pg_handle: self.pg_handle,
+              connected: true
+            }
+            println("  ✅ [FFI数据源] SQLite 连接成功: \{filename}")
+            (new_ds, true)
+          } else {
+            // 连接失败时，handle 可能是 -1，无法获取错误信息
+            println("  ❌ [FFI数据源] SQLite 连接失败: 无法打开数据库文件 \{filename}")
+            (self, false)
+          }
+        },
+        None => {
+          println("  ❌ [FFI数据源] SQLite 文件名未配置")
+          (self, false)
+        }
+      }
+    },
+    Mysql => {
+      match (self.config.host, self.config.port, self.config.user, self.config.password, self.config.database) {
+        (Some(host), Some(port), Some(user), Some(password), Some(database)) => {
+          let handle = mysql_connect_ffi(host, port, user, password, database)
+          if handle >= 0 {
+            let new_ds = {
+              config: self.config,
+              sqlite_handle: self.sqlite_handle,
+              mysql_handle: Some(handle),
+              pg_handle: self.pg_handle,
+              connected: true
+            }
+            println("  ✅ [FFI数据源] MySQL 连接成功: \{host}:\{port}/\{database}")
+            (new_ds, true)
+          } else {
+            let errmsg = mysql_errmsg_ffi(handle)
+            println("  ❌ [FFI数据源] MySQL 连接失败: \{errmsg}")
+            (self, false)
+          }
+        },
+        _ => {
+          println("  ❌ [FFI数据源] MySQL 配置不完整")
+          (self, false)
+        }
+      }
+    },
+    Postgres => {
+      match (self.config.host, self.config.port, self.config.user, self.config.password, self.config.database) {
+        (Some(host), Some(port), Some(user), Some(password), Some(database)) => {
+          let handle = pg_connect_ffi(host, port, user, password, database)
+          if handle >= 0 {
+            let new_ds = {
+              config: self.config,
+              sqlite_handle: self.sqlite_handle,
+              mysql_handle: self.mysql_handle,
+              pg_handle: Some(handle),
+              connected: true
+            }
+            println("  ✅ [FFI数据源] PostgreSQL 连接成功: \{host}:\{port}/\{database}")
+            (new_ds, true)
+          } else {
+            let errmsg = pg_errmsg_ffi(handle)
+            println("  ❌ [FFI数据源] PostgreSQL 连接失败: \{errmsg}")
+            (self, false)
+          }
+        },
+        _ => {
+          println("  ❌ [FFI数据源] PostgreSQL 配置不完整")
+          (self, false)
+        }
+      }
+    }
+  }
+}
+
+/// 执行 SQL（不返回结果）
+pub fn FFIDataSource::execute(
+  self : FFIDataSource,
+  sql : String,
+  params : Array[String]
+) -> Int {
+  if !self.connected {
+    println("  ⚠️  [FFI数据源] 数据库未连接")
+    return 0
+  }
+  
+  match self.config.db_type {
+    Sqlite => {
+      match self.sqlite_handle {
+        Some(handle) => {
+          if params.length() > 0 {
+            let result = sqlite3_exec_prepared_ffi(handle, sql, params)
+            if result == 0 {
+              println("  ✅ [FFI数据源] SQLite 执行成功: \{sql}")
+              1  // 返回影响行数（简化实现）
+            } else {
+              let errmsg = sqlite3_errmsg_ffi(handle)
+              println("  ❌ [FFI数据源] SQLite 执行失败: \{errmsg}")
+              0
+            }
+          } else {
+            let result = sqlite3_exec_ffi(handle, sql)
+            if result == 0 {
+              println("  ✅ [FFI数据源] SQLite 执行成功: \{sql}")
+              1
+            } else {
+              let errmsg = sqlite3_errmsg_ffi(handle)
+              println("  ❌ [FFI数据源] SQLite 执行失败: \{errmsg}")
+              0
+            }
+          }
+        },
+        None => {
+          println("  ❌ [FFI数据源] SQLite 连接句柄不存在")
+          0
+        }
+      }
+    },
+    Mysql => {
+      match self.mysql_handle {
+        Some(handle) => {
+          let result = mysql_execute_ffi(handle, sql)
+          if result == 0 {
+            println("  ✅ [FFI数据源] MySQL 执行成功: \{sql}")
+            1
+          } else {
+            let errmsg = mysql_errmsg_ffi(handle)
+            println("  ❌ [FFI数据源] MySQL 执行失败: \{errmsg}")
+            0
+          }
+        },
+        None => {
+          println("  ❌ [FFI数据源] MySQL 连接句柄不存在")
+          0
+        }
+      }
+    },
+    Postgres => {
+      match self.pg_handle {
+        Some(handle) => {
+          let result = pg_execute_ffi(handle, sql, params)
+          if result == 0 {
+            println("  ✅ [FFI数据源] PostgreSQL 执行成功: \{sql}")
+            1
+          } else {
+            let errmsg = pg_errmsg_ffi(handle)
+            println("  ❌ [FFI数据源] PostgreSQL 执行失败: \{errmsg}")
+            0
+          }
+        },
+        None => {
+          println("  ❌ [FFI数据源] PostgreSQL 连接句柄不存在")
+          0
+        }
+      }
+    }
+  }
+}
+
+/// 查询数据
+pub fn FFIDataSource::query(
+  self : FFIDataSource,
+  sql : String,
+  params : Array[String],
+  row_mapper : RowMapper
+) -> String? {
+  if !self.connected {
+    println("  ⚠️  [FFI数据源] 数据库未连接")
+    return None
+  }
+  
+  match self.config.db_type {
+    Sqlite => {
+      match self.sqlite_handle {
+        Some(handle) => {
+          let rows = sqlite3_query_ffi(handle, sql, params)
+          if rows.length() > 0 {
+            // 解析第一行（列值用制表符分隔）
+            let first_row = rows[0]
+            let columns_iter = first_row.split('\t')
+            let mut columns_list : Array[String] = []
+            columns_iter.iter(fn(col) {
+              columns_list.push(col.to_string())
+            })
+            let row_map : @hashmap.HashMap[String, String] = @hashmap.new()
+            
+            // 简化处理：假设列名是 col0, col1, ...
+            let mut i = 0
+            while i < columns_list.length() {
+              row_map.set("col" + i.to_string(), columns_list[i])
+              i = i + 1
+            }
+            
+            println("  ✅ [FFI数据源] SQLite 查询成功，返回 \{rows.length()} 行")
+            Some(row_mapper(row_map))
+          } else {
+            println("  ℹ️  [FFI数据源] SQLite 查询无结果")
+            None
+          }
+        },
+        None => {
+          println("  ❌ [FFI数据源] SQLite 连接句柄不存在")
+          None
+        }
+      }
+    },
+    Mysql => {
+      match self.mysql_handle {
+        Some(handle) => {
+          let rows = mysql_query_ffi(handle, sql, params)
+          if rows.length() > 0 {
+            // 类似处理
+            let first_row = rows[0]
+            let columns_iter = first_row.split('\t')
+            let mut columns_list : Array[String] = []
+            columns_iter.iter(fn(col) {
+              columns_list.push(col)
+            })
+            let row_map : @hashmap.HashMap[String, String] = @hashmap.new()
+            let mut i = 0
+            while i < columns_list.length() {
+              row_map.set("col" + i.to_string(), columns_list[i])
+              i = i + 1
+            }
+            Some(row_mapper(row_map))
+          } else {
+            None
+          }
+        },
+        None => None
+      }
+    },
+    Postgres => {
+      match self.pg_handle {
+        Some(handle) => {
+          let rows = pg_query_ffi(handle, sql, params)
+          if rows.length() > 0 {
+            // 类似处理
+            let first_row = rows[0]
+            let columns_iter = first_row.split('\t')
+            let mut columns_list : Array[String] = []
+            columns_iter.iter(fn(col) {
+              columns_list.push(col)
+            })
+            let row_map : @hashmap.HashMap[String, String] = @hashmap.new()
+            let mut i = 0
+            while i < columns_list.length() {
+              row_map.set("col" + i.to_string(), columns_list[i])
+              i = i + 1
+            }
+            Some(row_mapper(row_map))
+          } else {
+            None
+          }
+        },
+        None => None
+      }
+    }
+  }
+}
+
+/// 关闭数据库连接
+pub fn FFIDataSource::close(
+  self : FFIDataSource
+) -> FFIDataSource {
+  match self.config.db_type {
+    Sqlite => {
+      match self.sqlite_handle {
+        Some(handle) => {
+          let _ = sqlite3_close_ffi(handle)
+          let new_ds = {
+            config: self.config,
+            sqlite_handle: None,
+            mysql_handle: self.mysql_handle,
+            pg_handle: self.pg_handle,
+            connected: false
+          }
+          println("  ✅ [FFI数据源] SQLite 连接已关闭")
+          new_ds
+        },
+        None => self
+      }
+    },
+    Mysql => {
+      match self.mysql_handle {
+        Some(handle) => {
+          let _ = mysql_close_ffi(handle)
+          let new_ds = {
+            config: self.config,
+            sqlite_handle: self.sqlite_handle,
+            mysql_handle: None,
+            pg_handle: self.pg_handle,
+            connected: false
+          }
+          println("  ✅ [FFI数据源] MySQL 连接已关闭")
+          new_ds
+        },
+        None => self
+      }
+    },
+    Postgres => {
+      match self.pg_handle {
+        Some(handle) => {
+          let _ = pg_close_ffi(handle)
+          let new_ds = {
+            config: self.config,
+            sqlite_handle: self.sqlite_handle,
+            mysql_handle: self.mysql_handle,
+            pg_handle: None,
+            connected: false
+          }
+          println("  ✅ [FFI数据源] PostgreSQL 连接已关闭")
+          new_ds
+        },
+        None => self
+      }
+    }
+  }
+}
+

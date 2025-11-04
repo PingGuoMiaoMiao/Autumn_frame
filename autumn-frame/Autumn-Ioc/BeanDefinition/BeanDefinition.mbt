@@ -87,27 +87,27 @@ pub fn BeanDefinition::new_from_factory(
 }
 
 /// 获取 Bean 名称
-pub fn get_name(self : BeanDefinition) -> String {
+pub fn BeanDefinition::get_name(self : BeanDefinition) -> String {
   self.name
 }
 
 /// 获取 Bean 类型
-pub fn get_bean_class(self : BeanDefinition) -> String {
+pub fn BeanDefinition::get_bean_class(self : BeanDefinition) -> String {
   self.bean_class
 }
 
 /// 获取实例（返回是否有实例的标识）
-pub fn get_instance(self : BeanDefinition) -> BeanInstance {
+pub fn BeanDefinition::get_instance(self : BeanDefinition) -> BeanInstance {
   self.instance
 }
 
 /// 设置实例
-pub fn set_instance(self : BeanDefinition, instance_id : String) -> Unit {
+pub fn BeanDefinition::set_instance(self : BeanDefinition, instance_id : String) -> Unit {
   self.instance = Instance(instance_id)
 }
 
 /// 是否已创建实例
-pub fn has_instance(self : BeanDefinition) -> Bool {
+pub fn BeanDefinition::has_instance(self : BeanDefinition) -> Bool {
   match self.instance {
     Instance(_) => true
     None => false
@@ -115,17 +115,17 @@ pub fn has_instance(self : BeanDefinition) -> Bool {
 }
 
 /// 是否是 Primary
-pub fn is_primary(self : BeanDefinition) -> Bool {
+pub fn BeanDefinition::is_primary(self : BeanDefinition) -> Bool {
   self.primary
 }
 
 /// 获取顺序
-pub fn get_order(self : BeanDefinition) -> Int {
+pub fn BeanDefinition::get_order(self : BeanDefinition) -> Int {
   self.order
 }
 
 /// 是否是通过构造函数创建
-pub fn is_constructor_creation(self : BeanDefinition) -> Bool {
+pub fn BeanDefinition::is_constructor_creation(self : BeanDefinition) -> Bool {
   match self.creation_type {
     Constructor => true
     _ => false
@@ -133,7 +133,7 @@ pub fn is_constructor_creation(self : BeanDefinition) -> Bool {
 }
 
 /// 是否是通过工厂方法创建
-pub fn is_factory_creation(self : BeanDefinition) -> Bool {
+pub fn BeanDefinition::is_factory_creation(self : BeanDefinition) -> Bool {
   match self.creation_type {
     FactoryMethod(_) => true
     _ => false
@@ -141,7 +141,7 @@ pub fn is_factory_creation(self : BeanDefinition) -> Bool {
 }
 
 /// 获取工厂 Bean 名称
-pub fn get_factory_bean_name(self : BeanDefinition) -> String? {
+pub fn BeanDefinition::get_factory_bean_name(self : BeanDefinition) -> String? {
   match self.creation_type {
     FactoryMethod(name) => Some(name)
     _ => None
@@ -149,22 +149,22 @@ pub fn get_factory_bean_name(self : BeanDefinition) -> String? {
 }
 
 /// 获取工厂方法名称
-pub fn get_factory_method_name(self : BeanDefinition) -> String? {
+pub fn BeanDefinition::get_factory_method_name(self : BeanDefinition) -> String? {
   self.factory_method_name
 }
 
 /// 获取初始化方法名称
-pub fn get_init_method_name(self : BeanDefinition) -> String? {
+pub fn BeanDefinition::get_init_method_name(self : BeanDefinition) -> String? {
   self.init_method_name
 }
 
 /// 获取销毁方法名称
-pub fn get_destroy_method_name(self : BeanDefinition) -> String? {
+pub fn BeanDefinition::get_destroy_method_name(self : BeanDefinition) -> String? {
   self.destroy_method_name
 }
 
 /// 转换为字符串（用于调试）
-pub fn to_string(self : BeanDefinition) -> String {
+pub fn BeanDefinition::to_string(self : BeanDefinition) -> String {
   let mut s = "BeanDefinition [name=" + self.name
   s = s + ", beanClass=" + self.bean_class
   

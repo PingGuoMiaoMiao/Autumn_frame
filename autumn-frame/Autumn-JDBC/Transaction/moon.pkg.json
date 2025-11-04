@@ -1,0 +1,9 @@
+{
+  "import": [],
+  "source": [
+    "TransactionDefinition.mbt",
+    "PlatformTransactionManager.mbt",
+    "TransactionManager.mbt"
+  ]
+}
+

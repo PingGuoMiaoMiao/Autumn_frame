@@ -10,5 +10,13 @@
   "repository": "",
   "license": "Apache-2.0",
   "keywords": [],
-  "description": ""
+  "description": "",
+  "preferred-target": "native",
+  "link": {
+    "native": {
+      "cc": "/usr/bin/gcc",
+      "cc-flags": "-fwrapv -fno-strict-aliasing",
+      "cc-link-flags": "-lsqlite3 -lmysqlclient -lpq"
+    }
+  }
 }

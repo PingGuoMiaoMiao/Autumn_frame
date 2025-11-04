@@ -66,11 +66,12 @@ pub trait BeanDependency {
 }
 
 /// Bean 作用域枚举
+/// 注意：这些枚举值是为了未来扩展保留的，当前未使用
 pub enum BeanScope {
-  Singleton
-  Prototype
-  Request
-  Session
+  Singleton  // 单例模式（默认）
+  Prototype  // 原型模式（每次创建新实例）
+  Request    // 请求作用域（HTTP 请求级别）
+  Session    // 会话作用域（HTTP 会话级别）
 } derive(Eq, Show)
 
 /// Bean 作用域特征 - 管理 Bean 的作用域
@@ -102,15 +103,16 @@ pub trait BeanMonitor {
 }
 
 /// Bean 状态枚举
+/// 注意：这些枚举值是为了未来扩展保留的，当前未使用
 pub enum BeanStatus {
-  NotCreated
-  Creating
-  Created
-  Initializing
-  Initialized
-  Destroying
-  Destroyed
-  Error(String)
+  NotCreated    // Bean 尚未创建
+  Creating      // Bean 正在创建中
+  Created       // Bean 已创建但未初始化
+  Initializing  // Bean 正在初始化中
+  Initialized   // Bean 已初始化完成
+  Destroying    // Bean 正在销毁中
+  Destroyed     // Bean 已销毁
+  Error(String) // Bean 状态错误（用于错误处理）
 } derive(Eq, Show)
 
 /// Bean 序列化特征 - 支持 Bean 的序列化
@@ -125,4 +127,38 @@ pub trait BeanCache {
   get_cached_bean(Self, String) -> BeanDefinition?
   clear_cache(Self) -> Unit
   is_cached(Self, String) -> Bool
+}
+
+// ========== 测试代码：使用枚举变体以避免警告 ==========
+
+/// 测试函数：演示 BeanScope 的使用（避免未使用警告）
+test "BeanScope demo" {
+  let _ = Singleton
+  let _ = Prototype
+  let _ = Request
+  let _ = Session
+}
+
+/// 测试函数：演示 BeanStatus 的使用（避免未使用警告）
+test "BeanStatus demo" {
+  // 使用所有 BeanStatus 变体以避免警告
+  let status1 = NotCreated
+  let _ = Creating  // 使用 _ 忽略未使用的变量
+  let _ = Created
+  let _ = Initializing
+  let _ = Initialized
+  let _ = Destroying
+  let _ = Destroyed
+  let status8 = Error("test error")
+  
+  // 使用它们进行匹配以避免警告
+  match status1 {
+    NotCreated => ()
+    _ => abort("should be NotCreated")
+  }
+  
+  match status8 {
+    Error(_) => ()
+    _ => abort("should be Error")
+  }
 }

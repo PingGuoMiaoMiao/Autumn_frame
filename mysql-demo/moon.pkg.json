@@ -1,0 +1,25 @@
+{
+  "is-main": true,
+  "import": [
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-JDBC/JdbcTemplate",
+      "alias": "JdbcTemplate"
+    }
+  ],
+  "pre-build": [
+    {
+      "input": ["mysql_wrapper.c"],
+      "output": ["mysql_wrapper.o"],
+      "command": "gcc -c -I$HOME/.moon/include -I/usr/include/mysql -fwrapv -fno-strict-aliasing -O2 $input -o $output"
+    }
+  ],
+  "link": {
+    "native": {
+      "cc": "/usr/bin/gcc",
+      "native-stub": [
+        "mysql_wrapper.c"
+      ],
+      "cc-link-flags": "-lmysqlclient $PWD/mysql-demo/mysql_wrapper.o"
+    }
+  }
+}

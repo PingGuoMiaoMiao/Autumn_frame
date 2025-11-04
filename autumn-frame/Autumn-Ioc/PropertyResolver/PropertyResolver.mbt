@@ -46,7 +46,7 @@ pub fn PropertyResolver::from_array(pairs : Array[(String, String)]) -> Property
 }
 
 /// 注册默认类型转换器
-fn register_default_converters(self : PropertyResolver) -> Unit {
+fn PropertyResolver::register_default_converters(self : PropertyResolver) -> Unit {
   // String 类型（直接返回）
   self.converters.set("String", fn(s) { s })
   
@@ -65,7 +65,7 @@ fn register_default_converters(self : PropertyResolver) -> Unit {
 }
 
 /// 注册自定义类型转换器
-pub fn register_converter(
+pub fn PropertyResolver::register_converter(
   self : PropertyResolver,
   type_name : String,
   converter : (String) -> String
@@ -78,7 +78,7 @@ pub fn register_converter(
 /// 1. 普通 key: "app.title"
 /// 2. ${key} 形式: "${app.title}"
 /// 3. ${key:default} 形式: "${app.title:Summer}"
-pub fn get_property(self : PropertyResolver, key : String) -> String? {
+pub fn PropertyResolver::get_property(self : PropertyResolver, key : String) -> String? {
   // 解析 ${...} 表达式
   match parse_property_expr(key) {
     Some(expr) => {
@@ -107,7 +107,7 @@ pub fn get_property(self : PropertyResolver, key : String) -> String? {
 }
 
 /// 获取必需的属性值（不存在则抛出错误）
-pub fn get_required_property(self : PropertyResolver, key : String) -> String? {
+pub fn PropertyResolver::get_required_property(self : PropertyResolver, key : String) -> String? {
   match self.properties.get(key) {
     Some(value) => self.parse_value(value)
     None => {
@@ -118,7 +118,7 @@ pub fn get_required_property(self : PropertyResolver, key : String) -> String? {
 }
 
 /// 获取属性值并指定默认值
-pub fn get_property_or_default(
+pub fn PropertyResolver::get_property_or_default(
   self : PropertyResolver, 
   key : String, 
   default : String
@@ -130,7 +130,7 @@ pub fn get_property_or_default(
 }
 
 /// 获取 Int 类型属性
-pub fn get_property_int(self : PropertyResolver, key : String) -> Int? {
+pub fn PropertyResolver::get_property_int(self : PropertyResolver, key : String) -> Int? {
   match self.get_property(key) {
     Some(v) => {
       // 手动解析整数
@@ -147,7 +147,7 @@ pub fn get_property_int(self : PropertyResolver, key : String) -> Int? {
 }
 
 /// 获取 Bool 类型属性
-pub fn get_property_bool(self : PropertyResolver, key : String) -> Bool? {
+pub fn PropertyResolver::get_property_bool(self : PropertyResolver, key : String) -> Bool? {
   match self.get_property(key) {
     Some(v) => {
       let lower = to_lower(v)
@@ -165,7 +165,7 @@ pub fn get_property_bool(self : PropertyResolver, key : String) -> Bool? {
 }
 
 /// 获取 Double 类型属性
-pub fn get_property_double(self : PropertyResolver, key : String) -> Double? {
+pub fn PropertyResolver::get_property_double(self : PropertyResolver, key : String) -> Double? {
   match self.get_property(key) {
     Some(v) => {
       match parse_double_manual(v) {
@@ -181,7 +181,7 @@ pub fn get_property_double(self : PropertyResolver, key : String) -> Double? {
 }
 
 /// 递归解析值中的 ${...} 表达式
-fn parse_value(self : PropertyResolver, value : String) -> String? {
+fn PropertyResolver::parse_value(self : PropertyResolver, value : String) -> String? {
   // 检查是否包含 ${...} 表达式
   if value.has_prefix("${") && value.has_suffix("}") {
     // 递归解析嵌套表达式
@@ -349,7 +349,7 @@ fn to_lower(s : String) -> String {
 }
 
 /// 检查是否包含某个 key
-pub fn contains_property(self : PropertyResolver, key : String) -> Bool {
+pub fn PropertyResolver::contains_property(self : PropertyResolver, key : String) -> Bool {
   match self.properties.get(key) {
     Some(_) => true
     None => false
@@ -357,7 +357,7 @@ pub fn contains_property(self : PropertyResolver, key : String) -> Bool {
 }
 
 /// 获取所有属性的 key 列表
-pub fn get_property_names(self : PropertyResolver) -> Array[String] {
+pub fn PropertyResolver::get_property_names(self : PropertyResolver) -> Array[String] {
   let names = []
   self.properties.iter().each(fn(entry) {
     let (k, _) = entry
@@ -367,7 +367,7 @@ pub fn get_property_names(self : PropertyResolver) -> Array[String] {
 }
 
 /// 设置属性
-pub fn set_property(self : PropertyResolver, key : String, value : String) -> Unit {
+pub fn PropertyResolver::set_property(self : PropertyResolver, key : String, value : String) -> Unit {
   self.properties.set(key, value)
 }
 

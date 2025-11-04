@@ -1,0 +1,25 @@
+{
+  "is-main": true,
+  "import": [
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-JDBC/JdbcTemplate",
+      "alias": "JdbcTemplate"
+    }
+  ],
+  "pre-build": [
+    {
+      "input": ["sqlite_wrapper.c"],
+      "output": ["sqlite_wrapper.o"],
+      "command": "gcc -c -I$HOME/.moon/include -fwrapv -fno-strict-aliasing -O2 $input -o $output"
+    }
+  ],
+  "link": {
+    "native": {
+      "cc": "/usr/bin/gcc",
+      "native-stub": [
+        "sqlite_wrapper.c"
+      ],
+      "cc-link-flags": "-lsqlite3 $PWD/ffi-demo/sqlite_wrapper.o"
+    }
+  }
+}

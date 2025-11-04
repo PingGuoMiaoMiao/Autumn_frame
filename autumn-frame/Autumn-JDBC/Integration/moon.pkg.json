@@ -1,0 +1,32 @@
+{
+  "import": [
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Advice",
+      "alias": "Advice"
+    },
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Aspect",
+      "alias": "Aspect"
+    },
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Aspect",
+      "alias": "AspectRegistry"
+    },
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Pointcut",
+      "alias": "Pointcut"
+    },
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Integration",
+      "alias": "AopIntegration"
+    },
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-JDBC/Transaction",
+      "alias": "Transaction"
+    }
+  ],
+  "source": [
+    "TransactionAspect.mbt"
+  ]
+}
+

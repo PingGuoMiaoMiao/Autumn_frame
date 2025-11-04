@@ -1,0 +1,8 @@
+{
+  "import": [],
+  "source": [
+    "ProxyFactory.mbt",
+    "MethodInterceptor.mbt",
+    "FunctionalProxy.mbt"
+  ]
+}
