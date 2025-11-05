@@ -26,9 +26,11 @@ pub extern "C" fn autumn_accept_connection(server_fd : Int) -> Int = "autumn_acc
 #borrow(client_fd)
 pub extern "C" fn autumn_read_request(client_fd : Int) -> Int = "autumn_read_request"
 
-/// 获取读取的请求数据（从静态缓冲区）
-/// 返回值：指向请求数据的 C 字符串指针
-pub extern "C" fn autumn_get_request_buffer() -> String = "autumn_get_request_buffer"
+/// 获取读取的请求数据的某个字节
+/// 参数：index - 字节索引
+/// 返回值：该位置的字节值，如果索引越界返回 -1
+#borrow(index)
+pub extern "C" fn autumn_get_request_byte(index : Int) -> Int = "autumn_get_request_byte"
 
 /// 获取读取的字节数
 pub extern "C" fn autumn_get_request_length() -> Int = "autumn_get_request_length"
@@ -112,23 +114,57 @@ pub impl Server for EmbeddedServer with start(self) {
         
         if bytes_read > 0 {
           // 从静态缓冲区获取请求数据
-          let buffer = autumn_get_request_buffer()
+          let buffer_len = autumn_get_request_length()
+          
+          // 调试：打印原始请求长度
+          println("[Server] Raw request length from C: " + bytes_read.to_string() + " bytes")
+          println("[Server] Buffer length from function: " + buffer_len.to_string() + " bytes")
+          
+          // 手动从字节数组构建字符串
+          // 使用字符串拼接方式，逐个字符构建
+          let mut buffer = ""
+          let mut i = 0
+          while i < buffer_len {
+            let byte = autumn_get_request_byte(i)
+            if byte >= 0 && byte <= 255 {
+              // 将字节转换为字符（假设是 UTF-8 编码）
+              // 注意：这里简化处理，只处理 ASCII 字符（0-127）
+              // 对于非 ASCII 字符，需要更复杂的 UTF-8 解码
+              let char_value = if byte <= 127 {
+                byte.unsafe_to_char()
+              } else {
+                // 对于非 ASCII 字符，暂时跳过或使用占位符
+                // TODO: 实现完整的 UTF-8 解码
+                '?'.to_int().unsafe_to_char()
+              }
+              // 将字符转换为字符串并拼接
+              buffer = buffer + char_value.to_string()
+            }
+            i = i + 1
+          }
+          println("[Server] Constructed string length: " + buffer.length().to_string() + " bytes")
           
           // 解析请求
           match EmbeddedServer::parse_request(buffer) {
             Some(request) => {
+              println("[Server] ✓ Parsed request: " + request.get_path())
+              
               // 使用 DispatcherServlet 处理请求
               let response = self.dispatcher.handle_request(request)
               
               // 格式化响应
               let response_str = EmbeddedServer::format_response(response)
               
+              println("[Server] Sending response: " + response.get_status_code().to_string() + " (" + response_str.length().to_string() + " bytes)")
+              
               // 发送响应
-              let _ = autumn_send_response(client_fd, response_str, response_str.length())
+              let bytes_sent = autumn_send_response(client_fd, response_str, response_str.length())
+              println("[Server] Sent " + bytes_sent.to_string() + " bytes")
             }
             None => {
               // 解析失败，返回 400 Bad Request
-              let error_response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\n\r\nBad Request"
+              println("[Server] ❌ Failed to parse request, sending 400 Bad Request")
+              let error_response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 11\r\nConnection: close\r\n\r\nBad Request"
               let _ = autumn_send_response(client_fd, error_response, error_response.length())
             }
           }
@@ -162,17 +198,6 @@ pub impl Server for EmbeddedServer with get_port(self) {
   self.port
 }
 
-/// 处理 HTTP 请求（内部方法）
-/// 
-/// 将 HTTP 请求转换为 DispatcherServlet 可以处理的格式
-fn EmbeddedServer::handle_http_request(
-  self : EmbeddedServer,
-  request : @Http.HttpRequest
-) -> @Http.HttpResponse {
-  // 使用 DispatcherServlet 处理请求
-  self.dispatcher.handle_request(request)
-}
-
 /// 将 HTTP 请求字符串解析为 HttpRequest 对象
 /// 
 /// 参数：
@@ -183,82 +208,95 @@ fn EmbeddedServer::handle_http_request(
 pub fn EmbeddedServer::parse_request(raw_request : String) -> @Http.HttpRequest? {
   // 解析 HTTP 请求字符串
   // 格式：GET /path HTTP/1.1\r\nHeader: Value\r\n\r\nBody
+  println("[Server] parse_request: raw_request length = " + raw_request.length().to_string())
   let lines = Array::from_iter(raw_request.split("\r\n"))
+  println("[Server] parse_request: split into " + lines.length().to_string() + " lines")
   
   if lines.length() == 0 {
+    println("[Server] parse_request: no lines, returning None")
     None
   } else {
     // 解析请求行
     let request_line = lines[0].to_string()
-    let request_parts = Array::from_iter(request_line.split(" "))
-    
-    if request_parts.length() < 2 {
+    println("[Server] parse_request: request_line = '" + request_line + "'")
+    if request_line.length() == 0 {
+      println("[Server] parse_request: empty request_line, returning None")
       None
     } else {
-      // 解析 HTTP 方法
-      let method_str = request_parts[0].to_string()
-      let http_method = @Http.HttpMethod::from_string(method_str)
+      let request_parts = Array::from_iter(request_line.split(" "))
+      println("[Server] parse_request: request_parts.length = " + request_parts.length().to_string())
       
-      // 解析路径（可能包含查询参数）
-      let path_with_query = request_parts[1].to_string()
-      let path_parts = Array::from_iter(path_with_query.split("?"))
-      let path = path_parts[0].to_string()
-      
-      // 解析查询参数
-      let query_params = @hashmap.new()
-      if path_parts.length() > 1 {
-        let query_string = path_parts[1].to_string()
-        let query_pairs = Array::from_iter(query_string.split("&"))
-        for pair in query_pairs {
-          let kv = Array::from_iter(pair.split("="))
-          if kv.length() == 2 {
-            let key = kv[0].to_string()
-            let value = kv[1].to_string()
-            query_params.set(key, value)
+      if request_parts.length() < 2 {
+        println("[Server] parse_request: request_parts.length < 2, returning None")
+        None
+      } else {
+        // 解析 HTTP 方法
+        let method_str = request_parts[0].to_string()
+        // 调试：打印方法字符串
+        println("[Server] Parsing method: '" + method_str + "'")
+        let http_method = @Http.HttpMethod::from_string(method_str)
+        
+        // 解析路径（可能包含查询参数）
+        let path_with_query = request_parts[1].to_string()
+        let path_parts = Array::from_iter(path_with_query.split("?"))
+        let path = path_parts[0].to_string()
+        
+        // 解析查询参数
+        let query_params = @hashmap.new()
+        if path_parts.length() > 1 {
+          let query_string = path_parts[1].to_string()
+          let query_pairs = Array::from_iter(query_string.split("&"))
+          for pair in query_pairs {
+            let kv = Array::from_iter(pair.split("="))
+            if kv.length() == 2 {
+              let key = kv[0].to_string()
+              let value = kv[1].to_string()
+              query_params.set(key, value)
+            }
           }
         }
-      }
-      
-      // 解析请求头
-      let headers = @hashmap.new()
-      let mut i = 1
-      while i < lines.length() {
-        let line = lines[i].to_string()
-        if line.length() == 0 {
-          // 空行，请求头结束
-          break
+        
+        // 解析请求头
+        let headers = @hashmap.new()
+        let mut i = 1
+        while i < lines.length() {
+          let line = lines[i].to_string()
+          if line.length() == 0 {
+            // 空行，请求头结束
+            break
+          }
+          let header_parts = Array::from_iter(line.split(": "))
+          if header_parts.length() == 2 {
+            let key = header_parts[0].to_string()
+            let value = header_parts[1].to_string()
+            headers.set(key, value)
+          }
+          i = i + 1
         }
-        let header_parts = Array::from_iter(line.split(": "))
-        if header_parts.length() == 2 {
-          let key = header_parts[0].to_string()
-          let value = header_parts[1].to_string()
-          headers.set(key, value)
-        }
-        i = i + 1
-      }
-      
-      // 解析请求体（如果有）
-      let body = if i + 1 < lines.length() {
-        // 请求体在空行之后
-        let mut body_str = ""
-        let mut j = i + 1
-        while j < lines.length() {
+        
+        // 解析请求体（如果有）
+        let body = if i + 1 < lines.length() {
+          // 请求体在空行之后
+          let mut body_str = ""
+          let mut j = i + 1
+          while j < lines.length() {
+            if body_str.length() > 0 {
+              body_str = body_str + "\r\n"
+            }
+            body_str = body_str + lines[j].to_string()
+            j = j + 1
+          }
           if body_str.length() > 0 {
-            body_str = body_str + "\r\n"
+            Some(body_str)
+          } else {
+            None
           }
-          body_str = body_str + lines[j].to_string()
-          j = j + 1
-        }
-        if body_str.length() > 0 {
-          Some(body_str)
         } else {
           None
         }
-      } else {
-        None
+        
+        Some(@Http.HttpRequest::new(http_method, path, query_params, headers, body))
       }
-      
-      Some(@Http.HttpRequest::new(http_method, path, query_params, headers, body))
     }
   }
 }
@@ -284,24 +322,35 @@ pub fn EmbeddedServer::format_response(response : @Http.HttpResponse) -> String 
     _ => "Unknown"
   }
   
-  // 构建响应行
+  // 构建响应行（必须严格遵循 HTTP/1.1 格式）
   let mut response_str = "HTTP/1.1 " + status_code.to_string() + " " + status_text + "\r\n"
   
-  // 添加响应头
+  // 添加响应头（必须按顺序添加，且每个头后面必须跟 \r\n）
   // 注意：HttpResponse 没有提供获取所有头的方法，这里简化实现
   response_str = response_str + "Content-Type: text/html; charset=utf-8\r\n"
   
   // 添加响应体
   match response.get_body() {
     Some(body) => {
+      // Content-Length 必须准确反映响应体的字节数
       response_str = response_str + "Content-Length: " + body.length().to_string() + "\r\n"
+      response_str = response_str + "Connection: close\r\n"
+      // 响应头和响应体之间必须有一个空行（\r\n）
       response_str = response_str + "\r\n"
+      // 响应体
       response_str = response_str + body
     }
     None => {
+      // 没有响应体时，Content-Length 为 0
+      response_str = response_str + "Content-Length: 0\r\n"
+      response_str = response_str + "Connection: close\r\n"
+      // 响应头和响应体之间必须有一个空行（\r\n）
       response_str = response_str + "\r\n"
     }
   }
+  
+  // 调试：打印响应字符串长度
+  println("[Server] Response string length: " + response_str.length().to_string() + " bytes")
   
   response_str
 }

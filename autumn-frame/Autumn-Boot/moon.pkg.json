@@ -1,0 +1,15 @@
+{
+  "is-main": false,
+  "import": [
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-WebMVC/Dispatcher"
+    },
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-Boot/Server"
+    }
+  ],
+  "source": [
+    "BootApplication.mbt"
+  ]
+}
+

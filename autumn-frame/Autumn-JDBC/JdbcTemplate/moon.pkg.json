@@ -10,7 +10,10 @@
     "MemoryDataSource.mbt",
     "DatabaseFFI.mbt",
     "FFIDataSource.mbt",
-    "MySQLDataSource.mbt"
+    "MySQLDataSource.mbt",
+    "NamedParameterJdbcTemplate.mbt",
+    "DataAccessException.mbt",
+    "SQLErrorCodeTranslator.mbt"
   ],
   "note": "DatabaseFFI.mbt 和 FFIDataSource.mbt 在 native 后端可用，在 wasm-gc 后端会有编译错误（这是预期的）。链接配置应在主程序包中设置。"
 }

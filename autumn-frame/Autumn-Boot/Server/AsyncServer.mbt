@@ -13,10 +13,7 @@
 /// ```
 
 // ========== 导入依赖 ==========
-// 注意：需要根据实际的 @async/http API 来导入
-// 根据文章示例，可能需要：
-// use @async/http.{Server, Request, Response}
-// 或类似的导入方式
+// 使用 moonbitlang/async 的 HTTP 和 Socket 模块
 
 // ========== 异步服务器实现 ==========
 
@@ -64,88 +61,66 @@ pub async fn AsyncServer::start(self : AsyncServer) -> Unit {
 
 /// 启动 HTTP 服务器（内部实现）
 /// 
-/// 使用 @async/http 模块创建 HTTP 服务器
+/// 使用 @async/http 和 @socket 模块创建 HTTP 服务器
 /// 
-/// 根据搜索结果，可能的 API 是：
-/// ```moonbit
-/// let addr = "127.0.0.1:8080"
-/// let server = @http.Server::new(addr)
-/// server.run(handle_request)
-/// ```
+/// 实现方式：
+/// 1. 创建 TCP 服务器：@socket.TcpServer::new(@socket.Addr::parse("0.0.0.0:\{port}"))
+/// 2. 使用 @async.with_task_group 管理并发连接
+/// 3. 为每个连接创建 @http.ServerConnection
+/// 4. 读取请求并处理，发送响应
 async fn AsyncServer::start_http_server(
   port : Int,
   dispatcher : @Dispatcher.DispatcherServlet
 ) -> Unit {
   // 构建服务器地址
-  let addr = "127.0.0.1:" + port.to_string()
+  let addr_str = "0.0.0.0:" + port.to_string()
   
-  println("[AsyncServer] Creating HTTP server on " + addr)
+  println("[AsyncServer] Creating HTTP server on " + addr_str)
   
-  // 尝试使用可能的 API
-  // 注意：实际 API 可能需要调整
-  // 根据搜索结果，可能是：
-  // 1. @http.Server::new(addr) 然后 server.run(handler)
-  // 2. 或者其他形式的 API
+  // 创建 TCP 服务器
+  let server = @socket.TcpServer::new(@socket.Addr::parse(addr_str))
+  defer server.close()
   
-  // 创建请求处理函数
-  // 将 @async/http 的请求转换为我们的 HttpRequest，然后使用 DispatcherServlet 处理
-  // 注意：这里需要根据实际的 @async/http API 来调整函数签名
-  let handler = async fn(req : String) -> String {
-    // 尝试转换请求（这里需要根据实际 API 调整）
-    // 暂时使用占位转换
-    let http_request = AsyncServer::convert_request_from_raw(req)
-    
-    // 使用 DispatcherServlet 处理请求
-    let http_response = dispatcher.handle_request(http_request)
-    
-    // 转换响应（这里需要根据实际 API 调整）
-    AsyncServer::convert_response_to_raw(http_response)
-  }
+  println("[AsyncServer] TCP server created, listening on port " + port.to_string())
   
-  // 尝试创建并启动服务器
-  // 注意：实际 API 可能需要调整
-  // 根据搜索结果，可能的实现：
-  // 
-  // 方式 1：使用 Server 类
-  // let server = @http.Server::new(addr)
-  // server.run(handler)
-  // 
-  // 方式 2：使用 listen 函数
-  // @http.listen(addr, handler)
-  // 
-  // 方式 3：使用其他 API
-  // 需要根据实际的 moonbitlang/async 文档来调整
-  
-  // 当前占位实现：由于不确定确切的 API，这里提供一个框架
-  // 实际使用时需要：
-  // 1. 查看 moonbitlang/async 的实际 API 文档
-  // 2. 根据实际 API 调整下面的代码
-  // 3. 取消注释并调整相应的代码
-  
-  // 尝试方式 1（如果 API 支持）：
-  // let server = @http.Server::new(addr)
-  // server.run(handler)
-  
-  // 尝试方式 2（如果 API 支持）：
-  // @http.listen(addr, handler)
-  
-  // 当前占位：打印信息
-  println("[AsyncServer] HTTP server handler created")
-  println("[AsyncServer] Note: Actual server creation requires @async/http API")
-  println("[AsyncServer] Current implementation is a placeholder")
-  println("[AsyncServer] Server address: " + addr)
-  println("[AsyncServer] To implement: uncomment and adjust the server creation code above")
-  
-  // 占位：实际应该等待服务器运行
-  // 这里需要实际的异步等待，否则服务器会立即退出
-  // 如果 API 支持，应该是类似这样的调用：
-  // await server.run(handler)
-  // 或者
-  // await @http.listen(addr, handler)
-  
-  // 临时：使用一个简单的等待来保持服务器运行（实际应该使用服务器 API）
-  // 注意：这只是占位，实际应该替换为服务器 API 调用
-  println("[AsyncServer] Placeholder: server would run here")
+  // 使用任务组来管理并发连接
+  @async.with_task_group(fn(ctx) {
+    // 接受连接循环
+    for {
+      // 接受新连接
+      let (conn, addr) = server.accept()
+      
+      // 创建 HTTP 服务器连接
+      let http_conn = @http.ServerConnection::new(conn)
+      
+      println("[AsyncServer] Received new connection from " + addr.to_string())
+      
+      // 为每个连接创建后台任务
+      ctx.spawn_bg(allow_failure=true, fn() {
+        defer {
+          println("[AsyncServer] Closing connection from " + addr.to_string())
+          http_conn.close()
+        }
+        
+        // 处理请求循环（一个连接可能发送多个请求）
+        for {
+          // 读取请求
+          let request = http_conn.read_request()
+          
+          println("[AsyncServer] Serving " + request.path)
+          
+          // 转换 @http.Request 到我们的 @Http.HttpRequest
+          let http_request = AsyncServer::convert_request(request)
+          
+          // 使用 DispatcherServlet 处理请求
+          let http_response = dispatcher.handle_request(http_request)
+          
+          // 发送响应
+          AsyncServer::send_response(http_conn, http_response)
+        }
+      })
+    }
+  })
 }
 
 /// 停止服务器
@@ -165,29 +140,77 @@ pub fn AsyncServer::get_port(self : AsyncServer) -> Int {
   self.port
 }
 
-/// 从原始请求字符串转换为 @Http.HttpRequest
+/// 将 @http.Request 转换为 @Http.HttpRequest
 /// 
-/// 这是一个辅助函数，用于从原始 HTTP 请求字符串解析
-/// 实际使用时，如果 @async/http 提供了 Request 对象，应该使用 convert_request
-fn AsyncServer::convert_request_from_raw(_raw_req : String) -> @Http.HttpRequest {
-  // 占位实现：返回默认请求
-  // 实际实现需要根据 @async/http 的 Request API 来调整
-  @Http.HttpRequest::new(
-    @Http.HttpMethod::from_string("GET"),
-    "/",
-    @hashmap.new(),
-    @hashmap.new(),
-    None
-  )
+/// 参数：
+/// - req: @http.Request 对象（来自 moonbitlang/async）
+/// 
+/// 返回值：
+/// - @Http.HttpRequest 对象（我们的框架使用的类型）
+fn AsyncServer::convert_request(req : @http.Request) -> @Http.HttpRequest {
+  // 转换 HTTP 方法
+  let http_method = match req.meth {
+    @http.Get => @Http.HttpMethod::from_string("GET")
+    @http.Post => @Http.HttpMethod::from_string("POST")
+    @http.Put => @Http.HttpMethod::from_string("PUT")
+    @http.Delete => @Http.HttpMethod::from_string("DELETE")
+    @http.Patch => @Http.HttpMethod::from_string("PATCH")
+    @http.Head => @Http.HttpMethod::from_string("HEAD")
+    @http.Options => @Http.HttpMethod::from_string("OPTIONS")
+    @http.Connect => @Http.HttpMethod::from_string("GET")  // 默认使用 GET
+    @http.Trace => @Http.HttpMethod::from_string("GET")    // 默认使用 GET
+  }
+  
+  // 解析路径（可能包含查询参数）
+  let path_with_query = req.path
+  let path_parts = Array::from_iter(path_with_query.split("?"))
+  let path = if path_parts.length() > 0 {
+    path_parts[0].to_string()
+  } else {
+    "/"
+  }
+  
+  // 解析查询参数
+  let query_params = @hashmap.new()
+  if path_parts.length() > 1 {
+    let query_string = path_parts[1].to_string()
+    let query_pairs = Array::from_iter(query_string.split("&"))
+    for pair in query_pairs {
+      let kv = Array::from_iter(pair.split("="))
+      if kv.length() == 2 {
+        let key = kv[0].to_string()
+        let value = kv[1].to_string()
+        query_params.set(key, value)
+      }
+    }
+  }
+  
+  // 转换请求头（从 Map[String, String] 到 HashMap[String, String]）
+  let headers = @hashmap.new()
+  // 注意：req.headers 是 Map[String, String]，需要转换为 HashMap
+  // 由于 Map 可能没有迭代器，这里简化处理
+  // 实际使用时可能需要根据 Map 的 API 来调整
+  // 暂时使用空的 headers，如果需要可以从 req.headers 中获取
+  
+  // 请求体：由于 @http.Request 不包含 body，我们需要从 ServerConnection 读取
+  // 但这里暂时使用 None，如果需要可以在调用处处理
+  let body = None
+  
+  @Http.HttpRequest::new(http_method, path, query_params, headers, body)
 }
 
-/// 将 @Http.HttpResponse 转换为原始响应字符串
+/// 发送 HTTP 响应
 /// 
-/// 这是一个辅助函数，用于将 HttpResponse 格式化为 HTTP 响应字符串
-/// 实际使用时，如果 @async/http 提供了 Response 对象，应该使用 convert_response
-fn AsyncServer::convert_response_to_raw(response : @Http.HttpResponse) -> String {
-  // 格式化 HTTP 响应
-  // 类似于 EmbeddedServer::format_response 的实现
+/// 参数：
+/// - conn: HTTP 服务器连接
+/// - response: HTTP 响应对象
+/// 
+/// 使用 @http.ServerConnection 的方法发送响应
+async fn AsyncServer::send_response(
+  conn : @http.ServerConnection,
+  response : @Http.HttpResponse
+) -> Unit {
+  // 获取状态码和状态文本
   let status_code = response.get_status_code()
   let status_text = match status_code {
     200 => "OK"
@@ -201,28 +224,40 @@ fn AsyncServer::convert_response_to_raw(response : @Http.HttpResponse) -> String
     _ => "Unknown"
   }
   
-  // 构建响应行
-  let mut response_str = "HTTP/1.1 " + status_code.to_string() + " " + status_text + "\r\n"
-  
-  // 添加响应头
+  // 构建响应头（从 response.headers 获取）
   // 注意：这里简化处理，实际应该从 response.headers 获取所有头
-  response_str = response_str + "Content-Type: text/html; charset=utf-8\r\n"
-  
-  // 添加响应体
-  match response.get_body() {
-    Some(body) => {
-      response_str = response_str + "Content-Length: " + body.length().to_string() + "\r\n"
-      response_str = response_str + "Connection: close\r\n"
-      response_str = response_str + "\r\n"
-      response_str = response_str + body
+  // 使用 Map 字面量语法
+  let extra_headers = match response.get_body() {
+    Some(_) => {
+      // 检查是否已经有 Content-Type 头
+      match response.get_header("Content-Type") {
+        Some(content_type) => {
+          { "Content-Type": content_type }
+        }
+        None => {
+          // 默认使用 text/html
+          { "Content-Type": "text/html; charset=utf-8" }
+        }
+      }
     }
-    None => {
-      response_str = response_str + "Content-Length: 0\r\n"
-      response_str = response_str + "Connection: close\r\n"
-      response_str = response_str + "\r\n"
-    }
+    None => { }
   }
   
-  response_str
+  // 发送响应头
+  conn.send_response(status_code, status_text, extra_headers~)
+  
+  // 发送响应体
+  match response.get_body() {
+    Some(body) => {
+      // 将字符串转换为字节数组并写入
+      // 注意：@io.Writer 的 write 方法接受 &Data，String 实现了 Data trait
+      // String 有 to_bytes() 方法，返回 Bytes
+      conn.write(body)
+    }
+    None => ()
+  }
+  
+  // 结束响应
+  conn.end_response()
 }
 

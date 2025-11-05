@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "deps": {
     "moonbitlang/x": "0.4.34",
-    "moonbitlang/async": "0.9.0",
+    "moonbitlang/async": "0.10.5",
     "Yoorkin/ArgParser": "0.1.11"
   },
   "readme": "README.mbt.md",
@@ -11,12 +11,12 @@
   "license": "Apache-2.0",
   "keywords": [],
   "description": "",
-  "preferred-target": "native",
   "link": {
     "native": {
       "cc": "/usr/bin/gcc",
       "cc-flags": "-fwrapv -fno-strict-aliasing",
       "cc-link-flags": "-lsqlite3 -lmysqlclient -lpq"
     }
-  }
+  },
+  "preferred-target": "native"
 }

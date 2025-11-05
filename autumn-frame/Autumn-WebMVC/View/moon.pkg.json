@@ -1,0 +1,13 @@
+{
+  "is-main": false,
+  "import": [
+    {
+      "path": "moonbitlang/x/fs",
+      "alias": "fs"
+    }
+  ],
+  "source": [
+    "ViewResolver.mbt"
+  ]
+}
+

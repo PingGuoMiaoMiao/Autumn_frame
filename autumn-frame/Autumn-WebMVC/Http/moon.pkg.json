@@ -1,0 +1,9 @@
+{
+  "is-main": false,
+  "import": [],
+  "source": [
+    "HttpRequest.mbt",
+    "HttpResponse.mbt"
+  ]
+}
+

@@ -1,0 +1,31 @@
+{
+  "is-main": false,
+  "import": [
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-WebMVC/Http"
+    },
+    {
+      "path": "username/Autumn_frame/autumn-frame/Autumn-WebMVC/Dispatcher"
+    },
+    {
+      "path": "moonbitlang/async",
+      "alias": "async"
+    },
+    {
+      "path": "moonbitlang/async/http",
+      "alias": "http"
+    },
+    {
+      "path": "moonbitlang/async/socket",
+      "alias": "socket"
+    },
+    {
+      "path": "moonbitlang/async/io"
+    }
+  ],
+  "source": [
+    "Server.mbt",
+    "AsyncServer.mbt"
+  ]
+}
+
