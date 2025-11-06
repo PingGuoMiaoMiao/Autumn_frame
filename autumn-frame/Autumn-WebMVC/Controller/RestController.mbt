@@ -17,23 +17,60 @@ pub fn JsonResponse::new(data : JsonData) -> JsonResponse {
   { data, }
 }
 
+/// 转义 JSON 字符串中的特殊字符
+/// 
+/// 转义以下字符：
+/// - \" -> \\"
+/// - \\ -> \\\\
+/// - \n -> \\n
+/// - \r -> \\r
+/// - \t -> \\t
+fn escape_json_string(s : String) -> String {
+  let mut result = ""
+  for i = 0; i < s.length(); i = i + 1 {
+    let c = s[i]
+    match c {
+      34 => result = result + "\\\""  // "
+      92 => result = result + "\\\\"  // \
+      10 => result = result + "\\n"   // \n
+      13 => result = result + "\\r"   // \r
+      9 => result = result + "\\t"    // \t
+      _ => {
+        // 对于普通字符，直接使用字符串切片
+        let char_str = s[i:i+1].to_string() catch { _ => "" }
+        result = result + char_str
+      }
+    }
+  }
+  result
+}
+
 /// 转换为 HTTP 响应
 pub fn JsonResponse::to_http_response(self : JsonResponse) -> @Http.HttpResponse {
   // 简化实现：将 HashMap 转换为 JSON 字符串
+  // 使用 HashMap 的 to_array 方法获取所有键值对
+  let entries = self.data.to_array()
+  
+  // 构建 JSON 字符串
   let mut json_str = "{"
   let mut first = true
   
-  self.data.iter().each(fn(entry) {
-    let (key, value) = entry
+  for i = 0; i < entries.length(); i = i + 1 {
+    let (key, value) = entries[i]
+    let escaped_key = escape_json_string(key)
+    let escaped_value = escape_json_string(value)
     if first {
-      json_str = json_str + "\"" + key + "\":\"" + value + "\""
+      json_str = json_str + "\"" + escaped_key + "\":\"" + escaped_value + "\""
       first = false
     } else {
-      json_str = json_str + ",\"" + key + "\":\"" + value + "\""
+      json_str = json_str + ",\"" + escaped_key + "\":\"" + escaped_value + "\""
     }
-  })
+  }
   
   json_str = json_str + "}"
+  
+  // 调试：打印生成的 JSON 字符串
+  println("[JsonResponse] Generated JSON: " + json_str)
   
   @Http.HttpResponse::json(json_str)
 }

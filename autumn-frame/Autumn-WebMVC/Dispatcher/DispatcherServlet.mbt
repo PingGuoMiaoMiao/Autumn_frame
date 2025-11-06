@@ -82,6 +82,16 @@ pub fn DispatcherServlet::set_exception_handler(
   { ..self, exception_handler: Some(exception_handler) }
 }
 
+/// 添加 CORS 响应头
+fn add_cors_headers(response : @Http.HttpResponse) -> @Http.HttpResponse {
+  let headers = response.headers
+  headers.set("Access-Control-Allow-Origin", "*")
+  headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+  headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+  headers.set("Access-Control-Max-Age", "3600")
+  response
+}
+
 /// 处理 HTTP 请求
 /// 
 /// 参数：
@@ -93,32 +103,48 @@ pub fn DispatcherServlet::handle_request(
   self : DispatcherServlet,
   request : @Http.HttpRequest
 ) -> @Http.HttpResponse {
-  // 1. 执行过滤器链（如果过滤器返回响应，则直接返回）
-  match self.apply_filters(request) {
-    Some(response) => response
-    None => {
-      // 2. 查找匹配的 Controller 或 RestController
-      match self.find_handler(request) {
-        Some(handler_info) => {
-          // 3. 执行处理器
-          match handler_info {
-            ControllerHandler(handler) => {
-              // Controller 处理器
-              handler(request)
-            }
-            RestControllerHandler(handler) => {
-              // RestController 处理器
-              let json_response = handler(request)
-              json_response.to_http_response()
+  // 0. 处理 OPTIONS 预检请求（CORS）
+  let request_method = request.get_method()
+  let is_options = match request_method {
+    @Http.HttpMethod::OPTIONS => true
+    _ => false
+  }
+  if is_options {
+    // OPTIONS 预检请求：返回 204 No Content 并添加 CORS 头
+    println("[DispatcherServlet] Handling OPTIONS preflight request for " + request.get_path())
+    let cors_response = @Http.HttpResponse::no_content()
+    let cors_response_with_headers = add_cors_headers(cors_response)
+    cors_response_with_headers
+  } else {
+    // 1. 执行过滤器链（如果过滤器返回响应，则直接返回）
+    let response = match self.apply_filters(request) {
+      Some(resp) => resp
+      None => {
+        // 2. 查找匹配的 Controller 或 RestController
+        match self.find_handler(request) {
+          Some(handler_info) => {
+            // 3. 执行处理器
+            match handler_info {
+              ControllerHandler(handler) => {
+                // Controller 处理器
+                handler(request)
+              }
+              RestControllerHandler(handler) => {
+                // RestController 处理器
+                let json_response = handler(request)
+                json_response.to_http_response()
+              }
             }
           }
-        }
-        None => {
-          // 4. 未找到处理器
-          @Http.HttpResponse::not_found(None)
+          None => {
+            // 4. 未找到处理器
+            @Http.HttpResponse::not_found(None)
+          }
         }
       }
     }
+    // 5. 添加 CORS 头
+    add_cors_headers(response)
   }
 }
 

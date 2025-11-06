@@ -326,14 +326,41 @@ pub fn EmbeddedServer::format_response(response : @Http.HttpResponse) -> String 
   let mut response_str = "HTTP/1.1 " + status_code.to_string() + " " + status_text + "\r\n"
   
   // 添加响应头（必须按顺序添加，且每个头后面必须跟 \r\n）
-  // 注意：HttpResponse 没有提供获取所有头的方法，这里简化实现
-  response_str = response_str + "Content-Type: text/html; charset=utf-8\r\n"
+  // 从 response.headers 中读取所有响应头（包括 CORS 头）
+  response.headers.iter().each(fn(entry) {
+    let (key, value) = entry
+    response_str = response_str + key + ": " + value + "\r\n"
+  })
+  
+  // 如果没有设置 Content-Type，则添加默认值
+  if response.get_header("Content-Type") is None {
+    response_str = response_str + "Content-Type: text/html; charset=utf-8\r\n"
+  }
   
   // 添加响应体
   match response.get_body() {
     Some(body) => {
-      // Content-Length 必须准确反映响应体的字节数
-      response_str = response_str + "Content-Length: " + body.length().to_string() + "\r\n"
+      // Content-Length 必须准确反映响应体的 UTF-8 字节数
+      // 计算 UTF-8 字节数（中文字符在 UTF-8 中占用 3 字节）
+      let mut utf8_byte_count = 0
+      for i = 0; i < body.length(); i = i + 1 {
+        let c = body[i]
+        // 计算每个字符的 UTF-8 字节数
+        if c < 0x80 {
+          // ASCII 字符：1 字节
+          utf8_byte_count = utf8_byte_count + 1
+        } else if c < 0x800 {
+          // 2 字节 UTF-8 字符
+          utf8_byte_count = utf8_byte_count + 2
+        } else if c < 0xD800 || c >= 0xE000 {
+          // 3 字节 UTF-8 字符（包括大部分中文字符）
+          utf8_byte_count = utf8_byte_count + 3
+        } else {
+          // UTF-16 代理对（4 字节 UTF-8），但简化处理为 3 字节
+          utf8_byte_count = utf8_byte_count + 3
+        }
+      }
+      response_str = response_str + "Content-Length: " + utf8_byte_count.to_string() + "\r\n"
       response_str = response_str + "Connection: close\r\n"
       // 响应头和响应体之间必须有一个空行（\r\n）
       response_str = response_str + "\r\n"

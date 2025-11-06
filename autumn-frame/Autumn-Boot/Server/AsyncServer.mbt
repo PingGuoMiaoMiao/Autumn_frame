@@ -107,7 +107,19 @@ async fn AsyncServer::start_http_server(
           // 读取请求
           let request = http_conn.read_request()
           
-          println("[AsyncServer] Serving " + request.path)
+          // 打印请求信息（包括方法）
+          let method_str = match request.meth {
+            @http.Get => "GET"
+            @http.Post => "POST"
+            @http.Put => "PUT"
+            @http.Delete => "DELETE"
+            @http.Patch => "PATCH"
+            @http.Head => "HEAD"
+            @http.Options => "OPTIONS"
+            @http.Connect => "CONNECT"
+            @http.Trace => "TRACE"
+          }
+          println("[AsyncServer] Serving " + method_str + " " + request.path)
           
           // 转换 @http.Request 到我们的 @Http.HttpRequest
           let http_request = AsyncServer::convert_request(request)
@@ -224,34 +236,100 @@ async fn AsyncServer::send_response(
     _ => "Unknown"
   }
   
-  // 构建响应头（从 response.headers 获取）
-  // 注意：这里简化处理，实际应该从 response.headers 获取所有头
-  // 使用 Map 字面量语法
-  let extra_headers = match response.get_body() {
-    Some(_) => {
-      // 检查是否已经有 Content-Type 头
-      match response.get_header("Content-Type") {
-        Some(content_type) => {
-          { "Content-Type": content_type }
+  // 构建响应头（从 response.headers 获取所有头）
+  // 注意：需要将所有 response.headers 中的头都添加到响应中（包括 CORS 头）
+  // 由于 @http.ServerConnection 的 send_response 需要 Map 类型，我们需要构建一个 Map
+  // 先获取所有响应头（包括 CORS 头）
+  let access_control_origin = response.get_header("Access-Control-Allow-Origin")
+  let access_control_methods = response.get_header("Access-Control-Allow-Methods")
+  let access_control_headers = response.get_header("Access-Control-Allow-Headers")
+  let access_control_max_age = response.get_header("Access-Control-Max-Age")
+  let content_type = response.get_header("Content-Type")
+  
+  // 确保 CORS 头被设置到 response.headers 中
+  // 如果 response.headers 中没有 CORS 头，则添加默认值
+  let cors_origin = match access_control_origin {
+    Some(v) => v
+    None => "*"
+  }
+  let cors_methods = match access_control_methods {
+    Some(v) => v
+    None => "GET, POST, PUT, DELETE, OPTIONS"
+  }
+  let cors_headers = match access_control_headers {
+    Some(v) => v
+    None => "Content-Type, Authorization"
+  }
+  let cors_max_age = match access_control_max_age {
+    Some(v) => v
+    None => "3600"
+  }
+  
+  // 将 CORS 头设置到 response.headers 中
+  response.headers.set("Access-Control-Allow-Origin", cors_origin)
+  response.headers.set("Access-Control-Allow-Methods", cors_methods)
+  response.headers.set("Access-Control-Allow-Headers", cors_headers)
+  response.headers.set("Access-Control-Max-Age", cors_max_age)
+  
+  // 设置 Content-Type（如果还没有设置）
+  match content_type {
+    Some(ct) => {
+      response.headers.set("Content-Type", ct)
+    }
+    None => {
+      match response.get_body() {
+        Some(_) => {
+          response.headers.set("Content-Type", "application/json; charset=utf-8")
         }
         None => {
-          // 默认使用 text/html
-          { "Content-Type": "text/html; charset=utf-8" }
+          response.headers.set("Content-Type", "text/plain")
         }
       }
     }
-    None => { }
   }
   
-  // 发送响应头
-  conn.send_response(status_code, status_text, extra_headers~)
+  // 构建 extra_headers Map（从 response.headers 构建）
+  // 注意：需要将 HashMap 转换为 Map 字面量
+  // 但由于 Map 字面量需要静态键，我们需要手动构建
+  let headers_map = {
+    "Access-Control-Allow-Origin": cors_origin,
+    "Access-Control-Allow-Methods": cors_methods,
+    "Access-Control-Allow-Headers": cors_headers,
+    "Access-Control-Max-Age": cors_max_age,
+    "Content-Type": match response.get_header("Content-Type") {
+      Some(ct) => ct
+      None => "text/plain"
+    }
+  }
+  
+  // 打印调试信息
+  println("[AsyncServer] Sending response:")
+  println("  Status: " + status_code.to_string() + " " + status_text)
+  println("  Access-Control-Allow-Origin: " + cors_origin)
+  println("  Access-Control-Allow-Methods: " + cors_methods)
+  println("  Access-Control-Allow-Headers: " + cors_headers)
+  println("  Access-Control-Max-Age: " + cors_max_age)
+  println("  Content-Type: " + headers_map["Content-Type"])
+  
+  // 测试 Map 的 to_array 方法
+  let headers_array = headers_map.to_array()
+  println("[AsyncServer] extra_headers Map contains " + headers_array.length().to_string() + " headers:")
+  for i = 0; i < headers_array.length(); i = i + 1 {
+    let (k, v) = headers_array[i]
+    println("    " + k + ": " + v)
+  }
+  
+  // 发送响应头（包含所有头，特别是 CORS 头）
+  // 使用 @http.ServerConnection 的 send_response 方法，并传递 extra_headers 参数
+  // extra_headers 应该包含所有响应头，包括 CORS 头
+  // 参考 moonbitlang/async 示例：使用链式调用
+  println("[AsyncServer] Calling send_response with extra_headers...")
+  conn.send_response(status_code, status_text, extra_headers=headers_map)
+  println("[AsyncServer] send_response completed")
   
   // 发送响应体
   match response.get_body() {
     Some(body) => {
-      // 将字符串转换为字节数组并写入
-      // 注意：@io.Writer 的 write 方法接受 &Data，String 实现了 Data trait
-      // String 有 to_bytes() 方法，返回 Bytes
       conn.write(body)
     }
     None => ()
@@ -260,4 +338,5 @@ async fn AsyncServer::send_response(
   // 结束响应
   conn.end_response()
 }
+
 

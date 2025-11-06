@@ -34,11 +34,12 @@
       "native-stub": [
         "../autumn-frame/Autumn-Boot/Server/http_server.c"
       ],
-      "cc-link-flags": "-fwrapv -fno-strict-aliasing /home/pingguomiaomiao/Desktop/Autumn_frame/summer-demo/http_server.o"
+      "cc-link-flags": "-fwrapv -fno-strict-aliasing /home/pingguomiaomiao/Desktop/Autumn_frame/autumn-demo/http_server.o"
     }
   },
   "source": [
-    "main.mbt"
+    "main.mbt",
+    "auth.mbt"
   ]
 }
 
