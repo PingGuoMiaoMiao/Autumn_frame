@@ -5,6 +5,152 @@
 
 // ========== 导入依赖 ==========
 
+fn parse_request_params(request : @Http.HttpRequest) -> @hashmap.HashMap[String, String]? {
+  match request.get_body() {
+    Some(body) => {
+      let content_type = match request.get_header("Content-Type") {
+        Some(ct) => ct
+        None => ""
+      }
+      if content_type.contains("application/json") {
+        Some(parse_json_data(body))
+      } else {
+        Some(parse_form_data(body))
+      }
+    }
+    None => None
+  }
+}
+
+fn opt_string_or(value : String?, fallback : String) -> String {
+  match value {
+    Some(v) => v
+    None => fallback
+  }
+}
+
+fn safe_strip_prefix(value : String, prefix : String) -> String {
+  if value.has_prefix(prefix) {
+    let len = value.length()
+    let pre_len = prefix.length()
+    if len > pre_len {
+      value[pre_len:len].to_string() catch { _ => value }
+    } else {
+      ""
+    }
+  } else {
+    value
+  }
+}
+
+fn extract_path_tail(path : String) -> String {
+  let parts = Array::from_iter(path.split("/"))
+  if parts.length() == 0 {
+    path
+  } else {
+    parts[parts.length() - 1].to_string()
+  }
+}
+
+fn handle_log_upload(request : @Http.HttpRequest) -> @Controller.JsonResponse {
+  match request.get_body() {
+    Some(body) => {
+      let content_type = match request.get_header("Content-Type") {
+        Some(ct) => ct
+        None => ""
+      }
+      
+      let params = if content_type.contains("application/json") {
+        parse_json_data(body)
+      } else {
+        // 允许表单格式作为降级方案
+        parse_form_data(body)
+      }
+      
+      match (params.get("level"), params.get("message")) {
+        (Some(level), Some(message)) => {
+          let request_id_opt = request.get_header("X-Request-Id")
+          let timestamp = match params.get("timestamp") {
+            Some(ts) => ts
+            None => ""
+          }
+          let context = match params.get("context") {
+            Some(ctx) => ctx
+            None => ""
+          }
+          let origin = match params.get("origin") {
+            Some(or) => or
+            None => ""
+          }
+          let device = match params.get("device") {
+            Some(dev) => dev
+            None => ""
+          }
+          
+          let request_id = match request_id_opt {
+            Some(id) => id
+            None => match params.get("logId") {
+              Some(user_log_id) => user_log_id
+              None => if timestamp != "" {
+                "log-" + timestamp
+              } else {
+                "log-" + level
+              }
+            }
+          }
+          
+          println("[LOG] id=" + request_id + " level=" + level + " message=" + message)
+          if timestamp != "" {
+            println("      timestamp=" + timestamp)
+          }
+          if context != "" {
+            println("      context=" + context)
+          }
+          if origin != "" {
+            println("      origin=" + origin)
+          }
+          if device != "" {
+            println("      device=" + device)
+          }
+          
+          let response = @hashmap.new()
+          response.set("success", "true")
+          response.set("message", "日志已接收")
+          response.set("requestId", request_id)
+          response.set("level", level)
+          response.set("logMessage", message)
+          if timestamp != "" {
+            response.set("timestamp", timestamp)
+          }
+          if context != "" {
+            response.set("context", context)
+          }
+          if origin != "" {
+            response.set("origin", origin)
+          }
+          if device != "" {
+            response.set("device", device)
+          }
+          
+          @Controller.JsonResponse::new(response)
+        }
+        _ => {
+          let error = @hashmap.new()
+          error.set("success", "false")
+          error.set("message", "请提供 level 与 message 字段")
+          @Controller.JsonResponse::new(error)
+        }
+      }
+    }
+    None => {
+      let error = @hashmap.new()
+      error.set("success", "false")
+      error.set("message", "请求体不能为空")
+      @Controller.JsonResponse::new(error)
+    }
+  }
+}
+
 /// 主函数
 fn main {
   println("============================================================")
@@ -254,12 +400,508 @@ fn main {
   
   println("✓ 创建 RestController: /api/users")
   
-  // 4.5 创建 DispatcherServlet（类似 Spring MVC 的 DispatcherServlet）
+  // 4.5 创建用户系统 RestController
+  let user_api_controller = @Controller.RestController::new("/api/user")
+    .post("/register", fn(request : @Http.HttpRequest) {
+      match parse_request_params(request) {
+        Some(params) => {
+          match (params.get("username"), params.get("password")) {
+            (Some(username), Some(password)) => {
+              let display_name = opt_string_or(params.get("displayName"), username + "_user")
+              let email = opt_string_or(params.get("email"), username + "@example.com")
+              let response = @hashmap.new()
+              response.set("success", "true")
+              response.set("userId", "user-" + username)
+              response.set("username", username)
+              response.set("displayName", display_name)
+              response.set("email", email)
+              response.set("token", "token-" + username + "-" + password.length().to_string())
+              response.set("channel", opt_string_or(params.get("channel"), "default"))
+              @Controller.JsonResponse::new(response)
+            }
+            _ => {
+              let error = @hashmap.new()
+              error.set("success", "false")
+              error.set("message", "username 与 password 为必填项")
+              @Controller.JsonResponse::new(error)
+            }
+          }
+        }
+        None => {
+          let error = @hashmap.new()
+          error.set("success", "false")
+          error.set("message", "请求体不能为空")
+          @Controller.JsonResponse::new(error)
+        }
+      }
+    })
+    .post("/login", fn(request : @Http.HttpRequest) {
+      match parse_request_params(request) {
+        Some(params) => {
+          match (params.get("username"), params.get("password")) {
+            (Some(username), Some(password)) => {
+              let remember = opt_string_or(params.get("remember"), "false")
+              let issued_at = opt_string_or(params.get("timestamp"), "")
+              let response = @hashmap.new()
+              response.set("success", "true")
+              response.set("username", username)
+              response.set("token", "token-" + username + "-" + password.length().to_string())
+              response.set("remember", remember)
+              if issued_at != "" {
+                response.set("issuedAt", issued_at)
+              }
+              @Controller.JsonResponse::new(response)
+            }
+            _ => {
+              let error = @hashmap.new()
+              error.set("success", "false")
+              error.set("message", "用户名或密码缺失")
+              @Controller.JsonResponse::new(error)
+            }
+          }
+        }
+        None => {
+          let error = @hashmap.new()
+          error.set("success", "false")
+          error.set("message", "请求体不能为空")
+          @Controller.JsonResponse::new(error)
+        }
+      }
+    })
+    .get("/info", fn(request : @Http.HttpRequest) {
+      let auth_header = opt_string_or(request.get_header("Authorization"), "")
+      let bearer_token = safe_strip_prefix(auth_header, "Bearer ")
+      let token_candidate = if bearer_token != "" {
+        bearer_token
+      } else {
+        opt_string_or(request.get_query_param("token"), "")
+      }
+      let token_parts = Array::from_iter(token_candidate.split("-"))
+      let resolved_username = if token_parts.length() >= 2 {
+        token_parts[1].to_string()
+      } else if token_candidate != "" {
+        token_candidate
+      } else {
+        "guest"
+      }
+      let detail = opt_string_or(request.get_query_param("detail"), "basic")
+      let response = @hashmap.new()
+      response.set("success", "true")
+      response.set("username", resolved_username)
+      response.set("token", token_candidate)
+      response.set("detail", detail)
+      response.set("avatar", "https://cdn.example.com/avatar/" + resolved_username + ".png")
+      response.set("roles", opt_string_or(request.get_query_param("roles"), "USER"))
+      @Controller.JsonResponse::new(response)
+    })
+    .put("/update", fn(request : @Http.HttpRequest) {
+      match parse_request_params(request) {
+        Some(params) => {
+          let nickname = opt_string_or(params.get("nickname"), "")
+          let email = opt_string_or(params.get("email"), "")
+          let avatar = opt_string_or(params.get("avatar"), "")
+          if nickname == "" && email == "" && avatar == "" {
+            let error = @hashmap.new()
+            error.set("success", "false")
+            error.set("message", "请至少提供一个需要更新的字段")
+            @Controller.JsonResponse::new(error)
+          } else {
+            let response = @hashmap.new()
+            response.set("success", "true")
+            if nickname != "" {
+              response.set("nickname", nickname)
+            }
+            if email != "" {
+              response.set("email", email)
+            }
+            if avatar != "" {
+              response.set("avatar", avatar)
+            }
+            response.set("updatedAt", opt_string_or(params.get("timestamp"), ""))
+            @Controller.JsonResponse::new(response)
+          }
+        }
+        None => {
+          let error = @hashmap.new()
+          error.set("success", "false")
+          error.set("message", "请求体不能为空")
+          @Controller.JsonResponse::new(error)
+        }
+      }
+    })
+    .post("/avatar", fn(request : @Http.HttpRequest) {
+      match parse_request_params(request) {
+        Some(params) => {
+          match params.get("fileName") {
+            Some(file_name) => {
+              let file_size = opt_string_or(params.get("fileSize"), "0")
+              let checksum = opt_string_or(params.get("checksum"), "")
+              let content_type = opt_string_or(params.get("contentType"), "image/png")
+              let response = @hashmap.new()
+              response.set("success", "true")
+              response.set("fileName", file_name)
+              response.set("fileSize", file_size)
+              response.set("contentType", content_type)
+              response.set("checksum", checksum)
+              response.set("avatarUrl", "https://cdn.example.com/avatar/" + file_name)
+              @Controller.JsonResponse::new(response)
+            }
+            None => {
+              let error = @hashmap.new()
+              error.set("success", "false")
+              error.set("message", "fileName 为必填项")
+              @Controller.JsonResponse::new(error)
+            }
+          }
+        }
+        None => {
+          let error = @hashmap.new()
+          error.set("success", "false")
+          error.set("message", "请求体不能为空")
+          @Controller.JsonResponse::new(error)
+        }
+      }
+    })
+  
+  println("✓ 创建用户系统 API: /api/user")
+  
+  // 4.6 创建视频模块 RestController
+  let video_api_controller = @Controller.RestController::new("/api/video")
+    .post("/upload", fn(request : @Http.HttpRequest) {
+      match parse_request_params(request) {
+        Some(params) => {
+          match (params.get("title"), params.get("fileName")) {
+            (Some(title), Some(file_name)) => {
+              let size = opt_string_or(params.get("fileSize"), "0")
+              let duration = opt_string_or(params.get("duration"), "0")
+              let category = opt_string_or(params.get("category"), "general")
+              let response = @hashmap.new()
+              response.set("success", "true")
+              response.set("videoId", "video-" + title)
+              response.set("title", title)
+              response.set("fileName", file_name)
+              response.set("fileSize", size)
+              response.set("duration", duration)
+              response.set("category", category)
+              response.set("transcodeTaskId", "job-" + file_name)
+              @Controller.JsonResponse::new(response)
+            }
+            _ => {
+              let error = @hashmap.new()
+              error.set("success", "false")
+              error.set("message", "title 与 fileName 为必填项")
+              @Controller.JsonResponse::new(error)
+            }
+          }
+        }
+        None => {
+          let error = @hashmap.new()
+          error.set("success", "false")
+          error.set("message", "请求体不能为空")
+          @Controller.JsonResponse::new(error)
+        }
+      }
+    })
+    .get("/list", fn(request : @Http.HttpRequest) {
+      let page = opt_string_or(request.get_query_param("page"), "1")
+      let page_size = opt_string_or(request.get_query_param("pageSize"), "10")
+      let category = opt_string_or(request.get_query_param("category"), "all")
+      let keyword = opt_string_or(request.get_query_param("keyword"), "")
+      let base_id = "video-" + page
+      let title_prefix = if keyword != "" { keyword } else { "视频" + page }
+      let item1 = "{\"id\":\"" + base_id + "-a\",\"title\":\"" + title_prefix + " A\",\"cover\":\"https://cdn.example.com/" + base_id + "-a.jpg\"}"
+      let item2 = "{\"id\":\"" + base_id + "-b\",\"title\":\"" + title_prefix + " B\",\"cover\":\"https://cdn.example.com/" + base_id + "-b.jpg\"}"
+      let items = "[" + item1 + "," + item2 + "]"
+      let meta = "{\"page\":\"" + page + "\",\"pageSize\":\"" + page_size + "\",\"category\":\"" + category + "\",\"hasNext\":\"true\"}"
+      let response = @hashmap.new()
+      response.set("success", "true")
+      response.set("items", items)
+      response.set("meta", meta)
+      @Controller.JsonResponse::new(response)
+    })
+    .get("/{id}", fn(request : @Http.HttpRequest) {
+      let video_id = extract_path_tail(request.get_path())
+      let response = @hashmap.new()
+      response.set("success", "true")
+      response.set("videoId", video_id)
+      response.set("title", "视频 - " + video_id)
+      response.set("cover", "https://cdn.example.com/" + video_id + ".jpg")
+      response.set("duration", opt_string_or(request.get_query_param("duration"), "180"))
+      response.set("playUrl", "https://cdn.example.com/stream/" + video_id + ".m3u8")
+      response.set("description", "视频 " + video_id + " 的动态描述")
+      @Controller.JsonResponse::new(response)
+    })
+    .post("/{id}/like", fn(request : @Http.HttpRequest) {
+      let video_id = extract_path_tail(request.get_path())
+      match parse_request_params(request) {
+        Some(params) => {
+          let action = opt_string_or(params.get("action"), "toggle")
+          let response = @hashmap.new()
+          response.set("success", "true")
+          response.set("videoId", video_id)
+          response.set("action", action)
+          response.set(
+            "status",
+            if action == "cancel" { "unliked" } else { "liked" },
+          )
+          @Controller.JsonResponse::new(response)
+        }
+        None => {
+          let response = @hashmap.new()
+          response.set("success", "true")
+          response.set("videoId", video_id)
+          response.set("action", "toggle")
+          response.set("status", "liked")
+          @Controller.JsonResponse::new(response)
+        }
+      }
+    })
+    .post("/{id}/favorite", fn(request : @Http.HttpRequest) {
+      let video_id = extract_path_tail(request.get_path())
+      match parse_request_params(request) {
+        Some(params) => {
+          let action = opt_string_or(params.get("action"), "toggle")
+          let response = @hashmap.new()
+          response.set("success", "true")
+          response.set("videoId", video_id)
+          response.set("action", action)
+          response.set(
+            "status",
+            if action == "cancel" { "removed" } else { "favorited" },
+          )
+          @Controller.JsonResponse::new(response)
+        }
+        None => {
+          let response = @hashmap.new()
+          response.set("success", "true")
+          response.set("videoId", video_id)
+          response.set("action", "toggle")
+          response.set("status", "favorited")
+          @Controller.JsonResponse::new(response)
+        }
+      }
+    })
+    .get("/{id}/comments", fn(request : @Http.HttpRequest) {
+      let video_id = extract_path_tail(request.get_path())
+      let page = opt_string_or(request.get_query_param("page"), "1")
+      let item1 = "{\"id\":\"" + video_id + "-c" + page + "1\",\"author\":\"demo_user\",\"content\":\"好视频！第 " + page + " 页\",\"createdAt\":\"2025-11-08T12:00:00Z\"}"
+      let item2 = "{\"id\":\"" + video_id + "-c" + page + "2\",\"author\":\"guest\",\"content\":\"点赞学习\",\"createdAt\":\"2025-11-08T12:05:00Z\"}"
+      let comments = "[" + item1 + "," + item2 + "]"
+      let response = @hashmap.new()
+      response.set("success", "true")
+      response.set("videoId", video_id)
+      response.set("comments", comments)
+      response.set("page", page)
+      @Controller.JsonResponse::new(response)
+    })
+    .post("/{id}/comment", fn(request : @Http.HttpRequest) {
+      let video_id = extract_path_tail(request.get_path())
+      match parse_request_params(request) {
+        Some(params) => {
+          match params.get("content") {
+            Some(content) => {
+              let author = opt_string_or(params.get("author"), "anonymous")
+              let response = @hashmap.new()
+              response.set("success", "true")
+              response.set("videoId", video_id)
+              response.set("commentId", video_id + "-c" + author)
+              response.set("author", author)
+              response.set("content", content)
+              response.set("createdAt", opt_string_or(params.get("timestamp"), ""))
+              @Controller.JsonResponse::new(response)
+            }
+            None => {
+              let error = @hashmap.new()
+              error.set("success", "false")
+              error.set("message", "content 为必填项")
+              @Controller.JsonResponse::new(error)
+            }
+          }
+        }
+        None => {
+          let error = @hashmap.new()
+          error.set("success", "false")
+          error.set("message", "请求体不能为空")
+          @Controller.JsonResponse::new(error)
+        }
+      }
+    })
+    .get("/recommend", fn(request : @Http.HttpRequest) {
+      let user_id = opt_string_or(request.get_query_param("userId"), "anonymous")
+      let seed = opt_string_or(request.get_query_param("seed"), "popular")
+      let stream = "[" +
+        "{\"id\":\"rec-" + seed + "-1\",\"title\":\"为 " + user_id + " 推荐的视频 1\"}," +
+        "{\"id\":\"rec-" + seed + "-2\",\"title\":\"为 " + user_id + " 推荐的视频 2\"}" +
+      "]"
+      let response = @hashmap.new()
+      response.set("success", "true")
+      response.set("userId", user_id)
+      response.set("seed", seed)
+      response.set("items", stream)
+      @Controller.JsonResponse::new(response)
+    })
+  
+  println("✓ 创建视频模块 API: /api/video")
+  
+  // 4.7 创建搜索 API
+  let search_controller = @Controller.RestController::new("/api")
+    .get("/search", fn(request : @Http.HttpRequest) {
+      let keyword = opt_string_or(request.get_query_param("q"), "")
+      if keyword == "" {
+        let error = @hashmap.new()
+        error.set("success", "false")
+        error.set("message", "q 为必填查询参数")
+        return @Controller.JsonResponse::new(error)
+      }
+      let page = opt_string_or(request.get_query_param("page"), "1")
+      let results = "[" +
+        "{\"id\":\"search-" + keyword + "-1\",\"title\":\"" + keyword + " 相关视频 A\"}," +
+        "{\"id\":\"search-" + keyword + "-2\",\"title\":\"" + keyword + " 相关视频 B\"}" +
+      "]"
+      let response = @hashmap.new()
+      response.set("success", "true")
+      response.set("keyword", keyword)
+      response.set("page", page)
+      response.set("results", results)
+      @Controller.JsonResponse::new(response)
+    })
+  
+  println("✓ 创建搜索 API: /api/search")
+  
+  // 4.8 创建 AI 互动接口
+  let ai_controller = @Controller.RestController::new("/api/ai")
+    .post("/chat", fn(request : @Http.HttpRequest) {
+      match parse_request_params(request) {
+        Some(params) => {
+          match params.get("prompt") {
+            Some(prompt) => {
+              let session_id = opt_string_or(params.get("sessionId"), "session-temp")
+              let response = @hashmap.new()
+              response.set("success", "true")
+              response.set("sessionId", session_id)
+              response.set("reply", "AI 针对 \"" + prompt + "\" 的示例回答")
+              response.set("promptTokens", prompt.length().to_string())
+              @Controller.JsonResponse::new(response)
+            }
+            None => {
+              let error = @hashmap.new()
+              error.set("success", "false")
+              error.set("message", "prompt 为必填项")
+              @Controller.JsonResponse::new(error)
+            }
+          }
+        }
+        None => {
+          let error = @hashmap.new()
+          error.set("success", "false")
+          error.set("message", "请求体不能为空")
+          @Controller.JsonResponse::new(error)
+        }
+      }
+    })
+    .post("/voice", fn(request : @Http.HttpRequest) {
+      match parse_request_params(request) {
+        Some(params) => {
+          match params.get("voiceId") {
+            Some(voice_id) => {
+              let response = @hashmap.new()
+              response.set("success", "true")
+              response.set("voiceId", voice_id)
+              response.set("transcript", opt_string_or(params.get("transcript"), ""))
+              response.set("reply", "AI 语音回复已生成")
+              @Controller.JsonResponse::new(response)
+            }
+            None => {
+              let error = @hashmap.new()
+              error.set("success", "false")
+              error.set("message", "voiceId 为必填项")
+              @Controller.JsonResponse::new(error)
+            }
+          }
+        }
+        None => {
+          let error = @hashmap.new()
+          error.set("success", "false")
+          error.set("message", "请求体不能为空")
+          @Controller.JsonResponse::new(error)
+        }
+      }
+    })
+    .post("/emotion", fn(request : @Http.HttpRequest) {
+      match parse_request_params(request) {
+        Some(params) => {
+          match params.get("content") {
+            Some(content) => {
+              let response = @hashmap.new()
+              response.set("success", "true")
+              response.set("emotion", opt_string_or(params.get("target"), "neutral"))
+              response.set("score", "0.82")
+              response.set("contentPreview", content)
+              @Controller.JsonResponse::new(response)
+            }
+            None => {
+              let error = @hashmap.new()
+              error.set("success", "false")
+              error.set("message", "content 为必填项")
+              @Controller.JsonResponse::new(error)
+            }
+          }
+        }
+        None => {
+          let error = @hashmap.new()
+          error.set("success", "false")
+          error.set("message", "请求体不能为空")
+          @Controller.JsonResponse::new(error)
+        }
+      }
+    })
+  
+  println("✓ 创建 AI 互动 API: /api/ai")
+  
+  // 4.9 创建 WebSocket 协调接口（HTTP 返回握手信息）
+  let ws_controller = @Controller.RestController::new("/ws")
+    .get("/chat", fn(request : @Http.HttpRequest) {
+      let response = @hashmap.new()
+      response.set("success", "true")
+      response.set("protocol", "websocket")
+      response.set("endpoint", "ws://" + opt_string_or(request.get_header("Host"), "localhost:8080") + "/ws/chat")
+      response.set("note", "当前示例仅返回握手说明，实际 WebSocket 升级需底层服务器支持")
+      @Controller.JsonResponse::new(response)
+    })
+  
+  println("✓ 创建 WebSocket 信息接口: /ws/chat")
+  
+  // 4.10 创建系统配置 Controller（日志上传等接口）
+  let system_controller = @Controller.RestController::new("/api/system")
+    .get("/config", fn(request : @Http.HttpRequest) {
+      let env = opt_string_or(request.get_query_param("env"), "dev")
+      let response = @hashmap.new()
+      response.set("success", "true")
+      response.set("env", env)
+      response.set("cdn", opt_string_or(request.get_query_param("cdn"), "https://cdn.example.com"))
+      response.set("enableFeatureX", opt_string_or(request.get_query_param("featureX"), "false"))
+      response.set("timestamp", opt_string_or(request.get_query_param("timestamp"), ""))
+      @Controller.JsonResponse::new(response)
+    })
+    // POST /api/system/logs - 上传客户端日志
+    .post("/logs", fn(request : @Http.HttpRequest) {
+      handle_log_upload(request)
+    })
+  
+  println("✓ 创建系统 Controller: /api/system")
+  
+  // 4.6 创建 DispatcherServlet（类似 Spring MVC 的 DispatcherServlet）
   let dispatcher = @Dispatcher.DispatcherServlet::new()
     .register_controller("rootController", root_controller)
     .register_controller("userController", user_controller)
     .register_rest_controller("authController", auth_controller)
     .register_rest_controller("apiController", api_controller)
+    .register_rest_controller("userApiController", user_api_controller)
+    .register_rest_controller("videoApiController", video_api_controller)
+    .register_rest_controller("searchController", search_controller)
+    .register_rest_controller("aiController", ai_controller)
+    .register_rest_controller("wsController", ws_controller)
+    .register_rest_controller("systemController", system_controller)
   
   println("✓ 创建 DispatcherServlet")
   println("")
@@ -381,17 +1023,125 @@ fn main {
     None => println("  响应体: 无")
   }
   
-  // 5.8 测试 404
+  // 5.8 测试 POST /api/system/logs
+  let log_payload = "{\"level\":\"INFO\",\"message\":\"初始化成功\",\"timestamp\":\"2025-11-08T12:00:00Z\",\"origin\":\"frontend\",\"device\":\"web\"}"
+  let system_headers = @hashmap.new()
+  system_headers.set("Content-Type", "application/json")
+  system_headers.set("X-Request-Id", "req-log-demo-1")
   let request7 = @Http.HttpRequest::new(
+    @Http.HttpMethod::from_string("POST"),
+    "/api/system/logs",
+    @hashmap.new(),
+    system_headers,
+    Some(log_payload)
+  )
+  let response7 = dispatcher.handle_request(request7)
+  println("✓ POST /api/system/logs")
+  println("  状态码: " + response7.get_status_code().to_string())
+  match response7.get_body() {
+    Some(body) => println("  响应体: " + body)
+    None => println("  响应体: 无")
+  }
+  
+  // 5.9 测试 POST /api/user/register
+  let register_body = "{\"username\":\"demo_user\",\"password\":\"pass123\",\"displayName\":\"示例用户\",\"channel\":\"ios\"}"
+  let register_headers = @hashmap.new()
+  register_headers.set("Content-Type", "application/json")
+  let request8 = @Http.HttpRequest::new(
+    @Http.HttpMethod::from_string("POST"),
+    "/api/user/register",
+    @hashmap.new(),
+    register_headers,
+    Some(register_body)
+  )
+  let response8 = dispatcher.handle_request(request8)
+  println("✓ POST /api/user/register")
+  println("  状态码: " + response8.get_status_code().to_string())
+  match response8.get_body() {
+    Some(body) => println("  响应体: " + body)
+    None => println("  响应体: 无")
+  }
+  
+  // 5.10 测试 GET /api/video/list
+  let request9 = @Http.HttpRequest::new(
+    @Http.HttpMethod::from_string("GET"),
+    "/api/video/list?page=1&pageSize=2&keyword=moonbit",
+    @hashmap.new(),
+    @hashmap.new(),
+    None
+  )
+  let response9 = dispatcher.handle_request(request9)
+  println("✓ GET /api/video/list")
+  println("  状态码: " + response9.get_status_code().to_string())
+  match response9.get_body() {
+    Some(body) => println("  响应体: " + body)
+    None => println("  响应体: 无")
+  }
+  
+  // 5.11 测试 GET /api/search?q=moonbit
+  let request10 = @Http.HttpRequest::new(
+    @Http.HttpMethod::from_string("GET"),
+    "/api/search?q=moonbit&page=1",
+    @hashmap.new(),
+    @hashmap.new(),
+    None
+  )
+  let response10 = dispatcher.handle_request(request10)
+  println("✓ GET /api/search")
+  println("  状态码: " + response10.get_status_code().to_string())
+  match response10.get_body() {
+    Some(body) => println("  响应体: " + body)
+    None => println("  响应体: 无")
+  }
+  
+  // 5.12 测试 POST /api/ai/chat
+  let ai_body = "{\"prompt\":\"请推荐一部科幻电影\",\"sessionId\":\"session-demo\"}"
+  let ai_headers = @hashmap.new()
+  ai_headers.set("Content-Type", "application/json")
+  let request11 = @Http.HttpRequest::new(
+    @Http.HttpMethod::from_string("POST"),
+    "/api/ai/chat",
+    @hashmap.new(),
+    ai_headers,
+    Some(ai_body)
+  )
+  let response11 = dispatcher.handle_request(request11)
+  println("✓ POST /api/ai/chat")
+  println("  状态码: " + response11.get_status_code().to_string())
+  match response11.get_body() {
+    Some(body) => println("  响应体: " + body)
+    None => println("  响应体: 无")
+  }
+  
+  // 5.13 测试 GET /ws/chat
+  let ws_headers = @hashmap.new()
+  ws_headers.set("Host", "localhost:8080")
+  let request12 = @Http.HttpRequest::new(
+    @Http.HttpMethod::from_string("GET"),
+    "/ws/chat",
+    @hashmap.new(),
+    ws_headers,
+    None
+  )
+  let response12 = dispatcher.handle_request(request12)
+  println("✓ GET /ws/chat")
+  println("  状态码: " + response12.get_status_code().to_string())
+  match response12.get_body() {
+    Some(body) => println("  响应体: " + body)
+    None => println("  响应体: 无")
+  }
+  
+  // 5.14 测试 404
+  let request13 = @Http.HttpRequest::new(
     @Http.HttpMethod::from_string("GET"),
     "/not-found",
     @hashmap.new(),
     @hashmap.new(),
     None
   )
-  let response7 = dispatcher.handle_request(request7)
+  let response13 = dispatcher.handle_request(request13)
   println("✓ GET /not-found (404)")
-  println("  状态码: " + response7.get_status_code().to_string())
+  println("  状态码: " + response13.get_status_code().to_string())
   println("")
   
   // ========== 第六步：查看容器状态 ==========
@@ -419,6 +1169,26 @@ fn main {
   println("  - POST http://localhost:8080/api/users      - 创建用户（JSON）")
   println("  - POST http://localhost:8080/api/auth/login  - 用户登录（JSON）")
   println("  - POST http://localhost:8080/api/auth/logout - 用户登出（JSON）")
+  println("  - POST http://localhost:8080/api/user/register - 视频站注册用户")
+  println("  - POST http://localhost:8080/api/user/login    - 视频站用户登录")
+  println("  - GET  http://localhost:8080/api/user/info     - 获取用户信息")
+  println("  - PUT  http://localhost:8080/api/user/update   - 修改用户资料")
+  println("  - POST http://localhost:8080/api/user/avatar   - 上传用户头像")
+  println("  - POST http://localhost:8080/api/video/upload  - 上传视频")
+  println("  - GET  http://localhost:8080/api/video/list    - 视频列表")
+  println("  - GET  http://localhost:8080/api/video/{id}    - 视频详情")
+  println("  - POST http://localhost:8080/api/video/{id}/like     - 点赞/取消点赞")
+  println("  - POST http://localhost:8080/api/video/{id}/favorite - 收藏/取消收藏")
+  println("  - GET  http://localhost:8080/api/video/{id}/comments - 评论列表")
+  println("  - POST http://localhost:8080/api/video/{id}/comment  - 发表评论")
+  println("  - GET  http://localhost:8080/api/video/recommend - 视频推荐流")
+  println("  - GET  http://localhost:8080/api/search        - 视频搜索")
+  println("  - POST http://localhost:8080/api/ai/chat       - AI 文本对话")
+  println("  - POST http://localhost:8080/api/ai/voice      - AI 语音对话")
+  println("  - POST http://localhost:8080/api/ai/emotion    - 情绪检测")
+  println("  - GET  http://localhost:8080/ws/chat           - WebSocket 握手信息")
+  println("  - GET  http://localhost:8080/api/system/config - 获取系统配置")
+  println("  - POST http://localhost:8080/api/system/logs - 上传客户端日志（JSON 或表单）")
   println("")
   println("📌 测试账号：")
   println("  - 用户名: admin, 密码: 123456")
