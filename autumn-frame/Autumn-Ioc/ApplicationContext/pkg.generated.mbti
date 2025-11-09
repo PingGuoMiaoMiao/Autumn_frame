@@ -1,0 +1,201 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/ApplicationContext"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/BeanDefinition"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/PropertyResolver"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/ResourceResolver"
+  "moonbitlang/core/hashmap"
+  "moonbitlang/core/list"
+)
+
+// Values
+fn check_service_status(StartableService) -> Bool
+
+fn[T : Startable + Stoppable] manage_service_lifecycle(T) -> Unit
+
+fn[T : Startable] manage_startable_service(T) -> Unit
+
+fn start_service(StartableService) -> Unit
+
+// Errors
+
+// Types and methods
+pub struct ApplicationContext {
+  mut config : ContainerConfig
+  mut status : ContainerStatus
+  beans : @hashmap.HashMap[String, @BeanDefinition.BeanDefinition]
+  property_resolver : @PropertyResolver.PropertyResolver
+  resource_resolver : @ResourceResolver.ResourceResolver
+  dependencies : @hashmap.HashMap[String, Array[String]]
+  creators : @hashmap.HashMap[String, (ApplicationContext) -> String]
+  initializers : @hashmap.HashMap[String, (ApplicationContext, String) -> Unit]
+  destroyers : @hashmap.HashMap[String, (ApplicationContext, String) -> Unit]
+  factories : @hashmap.HashMap[String, (ApplicationContext) -> String]
+  instances : @hashmap.HashMap[String, String]
+  aop_integration_initialized : Bool
+}
+fn ApplicationContext::call_destroy_method(Self, String, String) -> Unit
+fn ApplicationContext::call_init_method(Self, String, String) -> Unit
+fn ApplicationContext::create_all_beans(Self) -> Unit
+fn ApplicationContext::create_all_beans_enhanced(Self) -> Unit
+fn ApplicationContext::create_bean_from_factory(Self, String) -> String?
+fn ApplicationContext::create_bean_with_dependencies(Self, String) -> String?
+fn ApplicationContext::destroy_all_beans(Self) -> Unit
+fn ApplicationContext::find_bean(Self, String) -> @BeanDefinition.BeanDefinition?
+fn ApplicationContext::get_all_bean_names(Self) -> Array[String]
+fn ApplicationContext::get_bean_count(Self) -> Int
+fn ApplicationContext::get_property(Self, String) -> String?
+fn ApplicationContext::get_property_bool(Self, String) -> Bool?
+fn ApplicationContext::get_property_double(Self, String) -> Double?
+fn ApplicationContext::get_property_int(Self, String) -> Int?
+fn ApplicationContext::get_status(Self) -> ContainerStatus
+fn ApplicationContext::is_initialized(Self) -> Bool
+fn ApplicationContext::new(Array[(String, String)], String) -> Self
+fn ApplicationContext::print_summary(Self) -> Unit
+fn ApplicationContext::register_bean(Self, String, String, Int, Bool) -> Unit
+fn ApplicationContext::register_bean_creator(Self, String, (Self) -> String) -> Unit
+fn ApplicationContext::register_dependency(Self, String, Array[String]) -> Unit
+fn ApplicationContext::register_destroy_method(Self, String, (Self, String) -> Unit) -> Unit
+fn ApplicationContext::register_factory_method(Self, String, String, (Self) -> String) -> Unit
+fn ApplicationContext::register_init_method(Self, String, (Self, String) -> Unit) -> Unit
+fn ApplicationContext::scan_and_register(Self) -> @list.List[String]
+fn ApplicationContext::scan_resources(Self) -> @list.List[String]
+fn ApplicationContext::scan_resources_paths(Self, @list.List[String]) -> @list.List[String]
+fn ApplicationContext::set_error(Self, String) -> Unit
+fn ApplicationContext::set_status(Self, ContainerStatus) -> Unit
+impl ContainerConfiguration for ApplicationContext
+impl ContainerStatusManager for ApplicationContext
+impl IoCContainer for ApplicationContext
+
+pub struct ContainerConfig {
+  auto_scan : Bool
+  debug_mode : Bool
+  base_package : String
+}
+impl Default for ContainerConfig
+impl Eq for ContainerConfig
+impl Show for ContainerConfig
+
+pub enum ContainerStatus {
+  NotInitialized
+  Initialized
+  Error(String)
+}
+impl Eq for ContainerStatus
+impl Show for ContainerStatus
+
+pub struct Service {
+  mut config : ServiceConfig
+  mut status : ServiceStatus
+}
+fn Service::new(String, Int, Int) -> Self
+impl Comparable for Service
+impl Configurable for Service
+impl ConfigurableMonitorable for Service
+impl Monitorable for Service
+impl Serializable for Service
+impl Startable for Service
+impl StartableStoppable for Service
+impl Stoppable for Service
+impl Eq for Service
+impl Show for Service
+
+pub struct ServiceConfig {
+  name : String
+  timeout : Int
+  retry_count : Int
+}
+impl Default for ServiceConfig
+impl Eq for ServiceConfig
+impl Show for ServiceConfig
+
+pub enum ServiceStatus {
+  Active
+  Inactive
+  Error(String)
+}
+impl Eq for ServiceStatus
+impl Show for ServiceStatus
+
+pub struct StartableService {
+  service : Service
+}
+fn StartableService::new(Service) -> Self
+impl Eq for StartableService
+impl Show for StartableService
+
+// Type aliases
+pub type BeanCreator = (ApplicationContext) -> String
+
+pub type BeanDestroyer = (ApplicationContext, String) -> Unit
+
+pub type BeanFactoryFn = (ApplicationContext) -> String
+
+pub type BeanInitializer = (ApplicationContext, String) -> Unit
+
+// Traits
+pub trait Comparable {
+  compare(Self, Self) -> Int
+}
+
+pub trait Configurable {
+  get_config(Self) -> ServiceConfig
+  set_config(Self, ServiceConfig) -> Unit
+}
+
+pub trait ConfigurableMonitorable {
+  get_service_config(Self) -> ServiceConfig
+  set_service_config(Self, ServiceConfig) -> Unit
+  get_service_status(Self) -> ServiceStatus
+  set_service_status(Self, ServiceStatus) -> Unit
+  get_service_metrics(Self) -> String
+}
+
+pub trait ContainerConfiguration {
+  get_config(Self) -> ContainerConfig
+  set_config(Self, ContainerConfig) -> Unit
+  is_debug_mode(Self) -> Bool
+}
+
+pub trait ContainerStatusManager {
+  set_status(Self, ContainerStatus) -> Unit
+  get_status(Self) -> ContainerStatus
+  is_initialized(Self) -> Bool
+}
+
+pub trait IoCContainer {
+  register_bean(Self, String, String, Int, Bool) -> Unit
+  find_bean(Self, String) -> @BeanDefinition.BeanDefinition?
+  get_bean_count(Self) -> Int
+  get_all_bean_names(Self) -> Array[String]
+}
+
+pub trait Monitorable {
+  get_status(Self) -> ServiceStatus
+  set_status(Self, ServiceStatus) -> Unit
+  get_metrics(Self) -> String
+}
+
+pub trait Serializable {
+  serialize(Self) -> String
+  deserialize(String) -> Self
+}
+
+pub trait Startable {
+  start(Self) -> Unit
+  is_running(Self) -> Bool
+}
+
+pub trait StartableStoppable {
+  start_service(Self) -> Unit
+  is_service_running(Self) -> Bool
+  stop_service(Self) -> Unit
+  is_service_stopped(Self) -> Bool
+}
+
+pub trait Stoppable {
+  stop(Self) -> Unit
+  is_stopped(Self) -> Bool
+}
+

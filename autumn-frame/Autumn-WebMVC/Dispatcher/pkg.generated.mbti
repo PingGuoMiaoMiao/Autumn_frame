@@ -1,0 +1,42 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Dispatcher"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Controller"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Exception"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Filter"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Http"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/View"
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct DispatcherServlet {
+  controllers : @hashmap.HashMap[String, @Controller.Controller]
+  rest_controllers : @hashmap.HashMap[String, @Controller.RestController]
+  view_resolver : @View.InternalViewResolver?
+  filters : Array[@Filter.FilterRegistrationBean]
+  exception_handler : @Exception.ExceptionHandler?
+}
+fn DispatcherServlet::handle_exception(Self, @Exception.ApplicationException, @Http.HttpRequest) -> @Http.HttpResponse
+fn DispatcherServlet::handle_request(Self, @Http.HttpRequest) -> @Http.HttpResponse
+fn DispatcherServlet::new() -> Self
+fn DispatcherServlet::register_controller(Self, String, @Controller.Controller) -> Self
+fn DispatcherServlet::register_filter(Self, @Filter.FilterRegistrationBean) -> Self
+fn DispatcherServlet::register_rest_controller(Self, String, @Controller.RestController) -> Self
+fn DispatcherServlet::set_exception_handler(Self, @Exception.ExceptionHandler) -> Self
+fn DispatcherServlet::set_view_resolver(Self, @View.InternalViewResolver) -> Self
+
+pub enum HandlerInfo {
+  ControllerHandler((@Http.HttpRequest) -> @Http.HttpResponse)
+  RestControllerHandler((@Http.HttpRequest) -> @Controller.JsonResponse)
+}
+
+// Type aliases
+
+// Traits
+

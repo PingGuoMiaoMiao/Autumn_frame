@@ -1,0 +1,173 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/BeanDefinition"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub enum BeanCreationType {
+  Constructor
+  FactoryMethod(String)
+}
+impl Compare for BeanCreationType
+impl Default for BeanCreationType
+impl Eq for BeanCreationType
+impl Show for BeanCreationType
+
+pub struct BeanDefinition {
+  name : String
+  bean_class : String
+  creation_type : BeanCreationType
+  factory_method_name : String?
+  mut instance : BeanInstance
+  order : Int
+  primary : Bool
+  init_method_name : String?
+  destroy_method_name : String?
+}
+fn BeanDefinition::get_bean_class(Self) -> String
+fn BeanDefinition::get_destroy_method_name(Self) -> String?
+fn BeanDefinition::get_factory_bean_name(Self) -> String?
+fn BeanDefinition::get_factory_method_name(Self) -> String?
+fn BeanDefinition::get_init_method_name(Self) -> String?
+fn BeanDefinition::get_instance(Self) -> BeanInstance
+fn BeanDefinition::get_name(Self) -> String
+fn BeanDefinition::get_order(Self) -> Int
+fn BeanDefinition::has_instance(Self) -> Bool
+fn BeanDefinition::is_constructor_creation(Self) -> Bool
+fn BeanDefinition::is_factory_creation(Self) -> Bool
+fn BeanDefinition::is_primary(Self) -> Bool
+fn BeanDefinition::new_from_constructor(String, String, Int, Bool, String?, String?) -> Self
+fn BeanDefinition::new_from_factory(String, String, String, String, Int, Bool, String?, String?) -> Self
+fn BeanDefinition::set_instance(Self, String) -> Unit
+fn BeanDefinition::to_string(Self) -> String
+impl Compare for BeanDefinition
+impl Default for BeanDefinition
+impl Eq for BeanDefinition
+impl Show for BeanDefinition
+
+pub enum BeanInstance {
+  None
+  Instance(String)
+}
+impl Compare for BeanInstance
+impl Default for BeanInstance
+impl Eq for BeanInstance
+impl Show for BeanInstance
+
+pub enum BeanScope {
+  Singleton
+  Prototype
+  Request
+  Session
+}
+impl Eq for BeanScope
+impl Show for BeanScope
+
+pub enum BeanStatus {
+  NotCreated
+  Creating
+  Created
+  Initializing
+  Initialized
+  Destroying
+  Destroyed
+  Error(String)
+}
+impl Eq for BeanStatus
+impl Show for BeanStatus
+
+// Type aliases
+
+// Traits
+pub trait BeanCache {
+  cache_bean(Self, String, BeanDefinition) -> Unit
+  get_cached_bean(Self, String) -> BeanDefinition?
+  clear_cache(Self) -> Unit
+  is_cached(Self, String) -> Bool
+}
+
+pub trait BeanConfiguration {
+  get_config_properties(Self) -> Array[(String, String)]
+  set_config_property(Self, String, String) -> Unit
+  get_config_property(Self, String) -> String?
+}
+
+pub trait BeanCreation {
+  is_constructor_creation(Self) -> Bool
+  is_factory_creation(Self) -> Bool
+  get_factory_bean_name(Self) -> String?
+  get_factory_method_name(Self) -> String?
+}
+
+pub trait BeanCreator {
+  create_by_constructor(Self, BeanDefinition) -> BeanInstance
+  create_by_factory(Self, BeanDefinition) -> BeanInstance
+}
+
+pub trait BeanDependency {
+  get_dependencies(Self) -> Array[String]
+  add_dependency(Self, String) -> Unit
+  remove_dependency(Self, String) -> Unit
+  has_dependency(Self, String) -> Bool
+}
+
+pub trait BeanEventListener {
+  on_bean_created(Self, String) -> Unit
+  on_bean_destroyed(Self, String) -> Unit
+  on_bean_initialized(Self, String) -> Unit
+}
+
+pub trait BeanFactory {
+  create_bean(Self, BeanDefinition) -> BeanInstance
+  can_create_bean(Self, BeanDefinition) -> Bool
+}
+
+pub trait BeanInstanceManager {
+  get_instance(Self) -> BeanInstance
+  set_instance(Self, String) -> Unit
+  has_instance(Self) -> Bool
+}
+
+pub trait BeanLifecycle {
+  get_init_method_name(Self) -> String?
+  get_destroy_method_name(Self) -> String?
+  can_initialize(Self) -> Bool
+  can_destroy(Self) -> Bool
+}
+
+pub trait BeanMetadata {
+  get_name(Self) -> String
+  get_bean_class(Self) -> String
+  get_order(Self) -> Int
+  is_primary(Self) -> Bool
+}
+
+pub trait BeanMonitor {
+  get_bean_status(Self, String) -> BeanStatus
+  get_all_bean_status(Self) -> Array[(String, BeanStatus)]
+  is_bean_healthy(Self, String) -> Bool
+}
+
+pub trait BeanOrdering {
+  get_priority(Self) -> Int
+  compare_priority(Self, Self) -> Int
+}
+
+pub trait BeanScopeManager {
+  get_scope(Self) -> BeanScope
+  is_singleton(Self) -> Bool
+  is_prototype(Self) -> Bool
+}
+
+pub trait BeanSerializable {
+  serialize_bean(Self, BeanDefinition) -> String
+  deserialize_bean(Self, String) -> BeanDefinition?
+}
+
+pub trait BeanValidator {
+  validate_definition(Self, BeanDefinition) -> Bool
+  get_validation_errors(Self, BeanDefinition) -> Array[String]
+}
+

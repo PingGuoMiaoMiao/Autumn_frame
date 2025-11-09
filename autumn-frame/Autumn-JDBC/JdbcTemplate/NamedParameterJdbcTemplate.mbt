@@ -17,18 +17,23 @@
 /// )
 /// ```
 
+///|
 /// NamedParameterJdbcTemplate 结构
 pub struct NamedParameterJdbcTemplate {
-  jdbc_template : JdbcTemplate  // 底层的 JdbcTemplate
+  jdbc_template : JdbcTemplate // 底层的 JdbcTemplate
 }
 
+///|
 /// 创建 NamedParameterJdbcTemplate
-pub fn NamedParameterJdbcTemplate::new(jdbc_template : JdbcTemplate) -> NamedParameterJdbcTemplate {
+pub fn NamedParameterJdbcTemplate::new(
+  jdbc_template : JdbcTemplate,
+) -> NamedParameterJdbcTemplate {
   { jdbc_template, }
 }
 
 // ========== 参数解析和转换 ==========
 
+///|
 /// 解析命名参数 SQL
 /// 
 /// 将 SQL 中的命名参数（:name）替换为位置参数（?）
@@ -42,36 +47,34 @@ pub fn NamedParameterJdbcTemplate::new(jdbc_template : JdbcTemplate) -> NamedPar
 /// - (converted_sql, param_values): 转换后的 SQL 和参数值数组
 fn parse_named_parameters(
   sql : String,
-  params : @hashmap.HashMap[String, String]
+  params : @hashmap.HashMap[String, String],
 ) -> (String, Array[String]) {
   let mut converted_sql = ""
   let param_values : Array[String] = []
   let param_values_mut = param_values
   let mut i = 0
   let sql_len = sql.length()
-  
   while i < sql_len {
     let c = sql[i].unsafe_to_char()
-    
     if c == ':' && i + 1 < sql_len {
       // 找到命名参数开始
       let mut param_name = ""
       let mut j = i + 1
-      
+
       // 提取参数名（字母、数字、下划线）
       while j < sql_len {
         let next_c = sql[j].unsafe_to_char()
-        if (next_c >= 'a' && next_c <= 'z') || 
-           (next_c >= 'A' && next_c <= 'Z') ||
-           (next_c >= '0' && next_c <= '9') ||
-           next_c == '_' {
+        if (next_c >= 'a' && next_c <= 'z') ||
+          (next_c >= 'A' && next_c <= 'Z') ||
+          (next_c >= '0' && next_c <= '9') ||
+          next_c == '_' {
           param_name = param_name + next_c.to_string()
           j = j + 1
         } else {
           break
         }
       }
-      
+
       // 查找参数值
       match params.get(param_name) {
         Some(value) => {
@@ -90,12 +93,12 @@ fn parse_named_parameters(
       i = i + 1
     }
   }
-  
   (converted_sql, param_values_mut)
 }
 
 // ========== 核心方法 ==========
 
+///|
 /// 执行 SQL（不返回结果）
 /// 
 /// 参数：
@@ -107,12 +110,13 @@ fn parse_named_parameters(
 pub fn NamedParameterJdbcTemplate::execute(
   self : NamedParameterJdbcTemplate,
   sql : String,
-  params : @hashmap.HashMap[String, String]
+  params : @hashmap.HashMap[String, String],
 ) -> Int {
   let (converted_sql, param_values) = parse_named_parameters(sql, params)
   self.jdbc_template.execute(converted_sql, param_values)
 }
 
+///|
 /// 查询并映射为单个对象
 /// 
 /// 参数：
@@ -127,12 +131,13 @@ pub fn NamedParameterJdbcTemplate::query(
   self : NamedParameterJdbcTemplate,
   sql : String,
   params : @hashmap.HashMap[String, String],
-  row_mapper : RowMapper
+  row_mapper : RowMapper,
 ) -> String? {
   let (converted_sql, param_values) = parse_named_parameters(sql, params)
   self.jdbc_template.query(converted_sql, param_values, row_mapper)
 }
 
+///|
 /// 查询并映射为列表
 /// 
 /// 参数：
@@ -146,12 +151,13 @@ pub fn NamedParameterJdbcTemplate::query_for_list(
   self : NamedParameterJdbcTemplate,
   sql : String,
   params : @hashmap.HashMap[String, String],
-  row_mapper : RowMapper
+  row_mapper : RowMapper,
 ) -> Array[String] {
   let (converted_sql, param_values) = parse_named_parameters(sql, params)
   self.jdbc_template.query_for_list(converted_sql, param_values, row_mapper)
 }
 
+///|
 /// 更新操作（INSERT/UPDATE/DELETE）
 /// 
 /// 参数：
@@ -163,12 +169,13 @@ pub fn NamedParameterJdbcTemplate::query_for_list(
 pub fn NamedParameterJdbcTemplate::update(
   self : NamedParameterJdbcTemplate,
   sql : String,
-  params : @hashmap.HashMap[String, String]
+  params : @hashmap.HashMap[String, String],
 ) -> Int {
   let (converted_sql, param_values) = parse_named_parameters(sql, params)
   self.jdbc_template.update(converted_sql, param_values)
 }
 
+///|
 /// 批量更新
 /// 
 /// 参数：
@@ -180,7 +187,7 @@ pub fn NamedParameterJdbcTemplate::update(
 pub fn NamedParameterJdbcTemplate::batch_update(
   self : NamedParameterJdbcTemplate,
   sql : String,
-  params_list : Array[@hashmap.HashMap[String, String]]
+  params_list : Array[@hashmap.HashMap[String, String]],
 ) -> Array[Int] {
   let results : Array[Int] = []
   let results_mut = results
@@ -195,6 +202,7 @@ pub fn NamedParameterJdbcTemplate::batch_update(
   results_mut
 }
 
+///|
 /// 查询单个值（如 COUNT、MAX 等聚合函数）
 /// 
 /// 参数：
@@ -207,9 +215,8 @@ pub fn NamedParameterJdbcTemplate::batch_update(
 pub fn NamedParameterJdbcTemplate::query_for_scalar(
   self : NamedParameterJdbcTemplate,
   sql : String,
-  params : @hashmap.HashMap[String, String]
+  params : @hashmap.HashMap[String, String],
 ) -> String? {
   let (converted_sql, param_values) = parse_named_parameters(sql, params)
   self.jdbc_template.query_for_scalar(converted_sql, param_values)
 }
-

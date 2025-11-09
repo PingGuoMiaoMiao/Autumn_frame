@@ -1,0 +1,72 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Controller"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Http"
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Controller {
+  base_path : String
+  methods : Array[ControllerMethod]
+}
+fn Controller::delete(Self, String, (@Http.HttpRequest) -> @Http.HttpResponse) -> Self
+fn Controller::find_handler(Self, @Http.HttpMethod, String) -> ((@Http.HttpRequest) -> @Http.HttpResponse)?
+fn Controller::get(Self, String, (@Http.HttpRequest) -> @Http.HttpResponse) -> Self
+fn Controller::get_base_path(Self) -> String
+fn Controller::get_methods(Self) -> Array[ControllerMethod]
+fn Controller::new(String) -> Self
+fn Controller::post(Self, String, (@Http.HttpRequest) -> @Http.HttpResponse) -> Self
+fn Controller::put(Self, String, (@Http.HttpRequest) -> @Http.HttpResponse) -> Self
+
+pub struct ControllerMethod {
+  http_method : @Http.HttpMethod
+  path : String
+  handler : (@Http.HttpRequest) -> @Http.HttpResponse
+}
+fn ControllerMethod::get_http_method(Self) -> @Http.HttpMethod
+fn ControllerMethod::get_path(Self) -> String
+fn ControllerMethod::new(@Http.HttpMethod, String, (@Http.HttpRequest) -> @Http.HttpResponse) -> Self
+
+pub struct JsonResponse {
+  data : @hashmap.HashMap[String, String]
+}
+fn JsonResponse::new(@hashmap.HashMap[String, String]) -> Self
+fn JsonResponse::to_http_response(Self) -> @Http.HttpResponse
+
+pub struct RestController {
+  base_path : String
+  methods : Array[RestControllerMethod]
+}
+fn RestController::delete(Self, String, (@Http.HttpRequest) -> JsonResponse) -> Self
+fn RestController::find_handler(Self, @Http.HttpMethod, String) -> ((@Http.HttpRequest) -> JsonResponse)?
+fn RestController::get(Self, String, (@Http.HttpRequest) -> JsonResponse) -> Self
+fn RestController::get_base_path(Self) -> String
+fn RestController::get_methods(Self) -> Array[RestControllerMethod]
+fn RestController::new(String) -> Self
+fn RestController::post(Self, String, (@Http.HttpRequest) -> JsonResponse) -> Self
+fn RestController::put(Self, String, (@Http.HttpRequest) -> JsonResponse) -> Self
+
+pub struct RestControllerMethod {
+  http_method : @Http.HttpMethod
+  path : String
+  handler : (@Http.HttpRequest) -> JsonResponse
+}
+fn RestControllerMethod::get_http_method(Self) -> @Http.HttpMethod
+fn RestControllerMethod::get_path(Self) -> String
+fn RestControllerMethod::new(@Http.HttpMethod, String, (@Http.HttpRequest) -> JsonResponse) -> Self
+
+// Type aliases
+pub type ControllerHandler = (@Http.HttpRequest) -> @Http.HttpResponse
+
+pub type JsonData = @hashmap.HashMap[String, String]
+
+pub type RestControllerHandler = (@Http.HttpRequest) -> JsonResponse
+
+// Traits
+

@@ -25,22 +25,25 @@
 
 // ========== HTTP 数据源实现 ==========
 
+///|
 /// HTTP 数据源配置
 pub struct HttpDataSourceConfig {
-  base_url : String          // 后端 API 基础 URL
-  timeout : Int              // 请求超时时间（毫秒）
-  headers : @hashmap.HashMap[String, String]  // 自定义请求头
+  base_url : String // 后端 API 基础 URL
+  timeout : Int // 请求超时时间（毫秒）
+  headers : @hashmap.HashMap[String, String] // 自定义请求头
 } derive(Eq, Show)
 
+///|
 /// 创建 HTTP 数据源配置
 pub fn HttpDataSourceConfig::new(base_url : String) -> HttpDataSourceConfig {
   {
     base_url,
-    timeout: 5000,  // 默认 5 秒
-    headers: @hashmap.new()
+    timeout: 5000, // 默认 5 秒
+    headers: @hashmap.new(),
   }
 }
 
+///|
 /// HTTP 数据源
 /// 
 /// 实现说明：
@@ -54,11 +57,13 @@ pub struct HttpDataSource {
   // 每次请求时创建新的连接
 }
 
+///|
 /// 创建 HTTP 数据源
 pub fn HttpDataSource::new(config : HttpDataSourceConfig) -> HttpDataSource {
   { config, }
 }
 
+///|
 /// 通过 HTTP API 执行 SQL（不返回结果）
 /// 
 /// API 接口设计：
@@ -71,13 +76,17 @@ pub fn HttpDataSource::new(config : HttpDataSourceConfig) -> HttpDataSource {
 pub fn HttpDataSource::execute(
   self : HttpDataSource,
   sql : String,
-  params : Array[String]
+  params : Array[String],
 ) -> Int {
   println("  🌐 [HTTP数据源] 执行 SQL: \{sql}")
   println("  📋 [HTTP数据源] 参数: \{params.length()} 个")
-  println("  🔗 [HTTP数据源] 请求 URL: \{self.config.base_url}/api/db/execute")
-  println("  ⚠️  [HTTP数据源] 当前是演示模式，实际需要使用 async_execute")
-  
+  println(
+    "  🔗 [HTTP数据源] 请求 URL: \{self.config.base_url}/api/db/execute",
+  )
+  println(
+    "  ⚠️  [HTTP数据源] 当前是演示模式，实际需要使用 async_execute",
+  )
+
   // 注意：实际实现需要使用 async HTTP 客户端
   // 示例代码（需要在 async 环境中）：
   // 
@@ -105,11 +114,12 @@ pub fn HttpDataSource::execute(
   // } else {
   //   0
   // }
-  
+
   // 演示模式：返回模拟值
   1
 }
 
+///|
 /// 通过 HTTP API 执行 SQL（异步版本）
 /// 
 /// 注意：这需要在 async 环境中调用
@@ -130,15 +140,14 @@ pub fn HttpDataSource::execute(
 pub async fn HttpDataSource::async_execute(
   self : HttpDataSource,
   sql : String,
-  params : Array[String]
+  params : Array[String],
 ) -> Int {
   // 构建 JSON 请求体
   let json_body = build_json_request(sql, params)
   let url = self.config.base_url + "/api/db/execute"
-  
   println("  🌐 [HTTP数据源] 发送 POST 请求到: \{url}")
   println("  📝 [HTTP数据源] 请求体: \{json_body}")
-  
+
   // 注意：完整的实现需要使用 moonbitlang/async/http 客户端
   // 示例代码（需要在完整的 async 环境中）：
   // 
@@ -175,38 +184,35 @@ pub async fn HttpDataSource::async_execute(
   //   println("  ❌ [HTTP数据源] 请求失败: \{response.code} \{response.reason}")
   //   0
   // }
-  
+
   // 当前实现：使用简化的 JSON 解析
   // 实际环境中，这应该通过 HTTP 客户端获取真实的响应
   let mock_response = "{\"affected_rows\":1,\"success\":true}"
   match parse_json_response(mock_response) {
-    Some(json) => {
+    Some(json) =>
       match json.get("affected_rows") {
-        Some(value) => {
+        Some(value) =>
           // 简化：假设值是数字字符串
           match parse_int(value) {
             Some(num) => num
             None => 1
           }
-        }
         None => 1
       }
-    }
     None => 1
   }
 }
 
+///|
 /// 解析整数（简化实现）
 fn parse_int(s : String) -> Int? {
   let mut result = 0
   let mut i = 0
   let mut negative = false
-  
   if s.length() > 0 && s[0] == '-' {
     negative = true
     i = 1
   }
-  
   while i < s.length() {
     let c = s[i]
     if c >= '0' && c <= '9' {
@@ -216,7 +222,6 @@ fn parse_int(s : String) -> Int? {
       break
     }
   }
-  
   if i > (if negative { 1 } else { 0 }) {
     Some(if negative { -result } else { result })
   } else {
@@ -224,6 +229,7 @@ fn parse_int(s : String) -> Int? {
   }
 }
 
+///|
 /// 通过 HTTP API 查询数据（同步版本，用于演示）
 /// 
 /// API 接口设计：
@@ -236,13 +242,17 @@ pub fn HttpDataSource::query(
   self : HttpDataSource,
   sql : String,
   params : Array[String],
-  row_mapper : RowMapper
+  row_mapper : RowMapper,
 ) -> String? {
   println("  🌐 [HTTP数据源] 查询 SQL: \{sql}")
   println("  📋 [HTTP数据源] 参数: \{params.length()} 个")
-  println("  🔗 [HTTP数据源] 请求 URL: \{self.config.base_url}/api/db/query")
-  println("  ⚠️  [HTTP数据源] 当前是演示模式，实际需要使用 async_query")
-  
+  println(
+    "  🔗 [HTTP数据源] 请求 URL: \{self.config.base_url}/api/db/query",
+  )
+  println(
+    "  ⚠️  [HTTP数据源] 当前是演示模式，实际需要使用 async_query",
+  )
+
   // 演示模式：返回模拟数据
   let mock_row : @hashmap.HashMap[String, String] = @hashmap.new()
   mock_row.set("id", "1")
@@ -250,6 +260,7 @@ pub fn HttpDataSource::query(
   Some(row_mapper(mock_row))
 }
 
+///|
 /// 通过 HTTP API 查询数据（异步版本）
 /// 
 /// 实际实现需要：
@@ -261,15 +272,14 @@ pub async fn HttpDataSource::async_query(
   self : HttpDataSource,
   sql : String,
   params : Array[String],
-  row_mapper : RowMapper
+  row_mapper : RowMapper,
 ) -> String? {
   // 构建 JSON 请求体
   let json_body = build_json_request(sql, params)
   let url = self.config.base_url + "/api/db/query"
-  
   println("  🌐 [HTTP数据源] 发送查询请求到: \{url}")
   println("  📝 [HTTP数据源] 请求体: \{json_body}")
-  
+
   // 当前实现：使用简化的 JSON 解析
   // 实际环境中，这应该通过 HTTP 客户端获取真实的响应
   let mock_response = "{\"rows\":[{\"id\":\"1\",\"name\":\"test\"}]}"
@@ -286,6 +296,7 @@ pub async fn HttpDataSource::async_query(
   }
 }
 
+///|
 /// 通过 HTTP API 批量执行 SQL（同步版本，用于演示）
 /// 
 /// API 接口设计：
@@ -297,13 +308,17 @@ pub async fn HttpDataSource::async_query(
 pub fn HttpDataSource::batch_execute(
   self : HttpDataSource,
   sql : String,
-  params_list : Array[Array[String]]
+  params_list : Array[Array[String]],
 ) -> Array[Int] {
   println("  🌐 [HTTP数据源] 批量执行 SQL: \{sql}")
   println("  📋 [HTTP数据源] 批次数量: \{params_list.length()}")
-  println("  🔗 [HTTP数据源] 请求 URL: \{self.config.base_url}/api/db/batch")
-  println("  ⚠️  [HTTP数据源] 当前是演示模式，实际需要使用 async_batch_execute")
-  
+  println(
+    "  🔗 [HTTP数据源] 请求 URL: \{self.config.base_url}/api/db/batch",
+  )
+  println(
+    "  ⚠️  [HTTP数据源] 当前是演示模式，实际需要使用 async_batch_execute",
+  )
+
   // 演示模式：返回模拟值
   let result : Array[Int] = []
   let mut i = 0
@@ -314,6 +329,7 @@ pub fn HttpDataSource::batch_execute(
   result
 }
 
+///|
 /// 通过 HTTP API 批量执行 SQL（异步版本）
 /// 
 /// API 接口设计：
@@ -323,13 +339,14 @@ pub fn HttpDataSource::batch_execute(
 pub async fn HttpDataSource::async_batch_execute(
   self : HttpDataSource,
   sql : String,
-  params_list : Array[Array[String]]
+  params_list : Array[Array[String]],
 ) -> Array[Int] {
   // 构建 JSON 请求体（包含参数列表）
   // 使用循环而不是闭包来避免可变变量捕获问题
-  let json_start = "{\"sql\":\"" + escape_json_string(sql) + "\",\"params_list\":["
+  let json_start = "{\"sql\":\"" +
+    escape_json_string(sql) +
+    "\",\"params_list\":["
   let mut json = json_start
-  
   let mut batch_idx = 0
   while batch_idx < params_list.length() {
     if batch_idx > 0 {
@@ -349,12 +366,10 @@ pub async fn HttpDataSource::async_batch_execute(
     batch_idx = batch_idx + 1
   }
   json = json + "]}"
-  
   let url = self.config.base_url + "/api/db/batch"
-  
   println("  🌐 [HTTP数据源] 发送批量请求到: \{url}")
   println("  📝 [HTTP数据源] 批次数量: \{params_list.length()}")
-  
+
   // 当前实现：返回模拟值
   // 完整实现需要解析响应的 affected_rows 数组
   let result : Array[Int] = []
@@ -369,13 +384,13 @@ pub async fn HttpDataSource::async_batch_execute(
 
 // ========== 工具函数 ==========
 
+///|
 /// 构建 JSON 请求体（辅助函数）
 /// 
 /// 实现基本的 JSON 序列化（转义特殊字符）
 pub fn build_json_request(sql : String, params : Array[String]) -> String {
   // 转义 SQL 中的特殊字符
   let escaped_sql = escape_json_string(sql)
-  
   let json_start = "{\"sql\":\"" + escaped_sql + "\",\"params\":["
   let mut json = json_start
   let mut i = 0
@@ -389,6 +404,7 @@ pub fn build_json_request(sql : String, params : Array[String]) -> String {
   json + "]}"
 }
 
+///|
 /// 转义 JSON 字符串中的特殊字符
 fn escape_json_string(s : String) -> String {
   let result = ""
@@ -409,6 +425,7 @@ fn escape_json_string(s : String) -> String {
   result_mut
 }
 
+///|
 /// 解析 JSON 响应（辅助函数）
 /// 
 /// 实现基本的 JSON 解析（简化版）
@@ -416,29 +433,28 @@ fn escape_json_string(s : String) -> String {
 pub fn parse_json_response(body : String) -> @hashmap.HashMap[String, String]? {
   // 简化实现：查找 "affected_rows" 或 "rows" 字段
   // 实际实现需要使用完整的 JSON 解析库
-  
+
   let result : @hashmap.HashMap[String, String] = @hashmap.new()
-  
+
   // 查找 affected_rows
   match find_json_field(body, "affected_rows") {
     Some(value) => {
       result.set("affected_rows", value)
       Some(result)
     }
-    None => {
+    None =>
       // 查找 rows（查询结果）
       match find_json_field(body, "rows") {
-        Some(_) => {
+        Some(_) =>
           // 如果有 rows 字段，解析第一个元素作为示例
           // 完整实现需要解析数组中的所有元素
           Some(result)
-        }
         None => None
       }
-    }
   }
 }
 
+///|
 /// 从 JSON 字符串中查找字段值（简化实现）
 fn find_json_field(json : String, field_name : String) -> String? {
   let field_pattern = "\"" + field_name + "\":"
@@ -470,7 +486,9 @@ fn find_json_field(json : String, field_name : String) -> String? {
           // 数字值
           let num_start = i
           let mut num_end = num_start
-          while num_end < json.length() && (json[num_end] >= '0' && json[num_end] <= '9') {
+          while num_end < json.length() &&
+                json[num_end] >= '0' &&
+                json[num_end] <= '9' {
             num_end = num_end + 1
           }
           Some(extract_substring(json, num_start, num_end))
@@ -483,6 +501,7 @@ fn find_json_field(json : String, field_name : String) -> String? {
   }
 }
 
+///|
 /// 查找子字符串位置（HttpDataSource 专用）
 fn find_json_pattern(s : String, pattern : String) -> Int? {
   let mut i = 0
@@ -505,6 +524,7 @@ fn find_json_pattern(s : String, pattern : String) -> Int? {
   None
 }
 
+///|
 /// 提取子字符串（简化实现）
 fn extract_substring(s : String, start : Int, end : Int) -> String {
   let result = ""
@@ -516,4 +536,3 @@ fn extract_substring(s : String, start : Int, end : Int) -> String {
   }
   result_mut
 }
-

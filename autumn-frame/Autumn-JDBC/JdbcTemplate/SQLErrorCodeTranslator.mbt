@@ -17,9 +17,11 @@
 
 // ========== 错误码转换器类型 ==========
 
+///|
 /// 错误码转换函数类型
 pub type ErrorCodeTranslator = (String) -> DataAccessException
 
+///|
 /// SQL 错误码转换器
 pub struct SQLErrorCodeTranslator {
   // MySQL 错误码映射
@@ -28,80 +30,119 @@ pub struct SQLErrorCodeTranslator {
   sqlite_error_map : @hashmap.HashMap[Int, ErrorCodeTranslator]
 }
 
+///|
 /// 创建错误码转换器
 pub fn SQLErrorCodeTranslator::new() -> SQLErrorCodeTranslator {
   let mysql_map = @hashmap.new()
   let sqlite_map = @hashmap.new()
-  
+
   // ========== MySQL 错误码映射 ==========
-  
+
   // 1045: Access denied for user
-  mysql_map.set(1045, fn(msg) { InvalidDataAccessResourceUsageException("访问被拒绝: " + msg) })
-  
+  mysql_map.set(1045, fn(msg) {
+    InvalidDataAccessResourceUsageException("访问被拒绝: " + msg)
+  })
+
   // 1054: Unknown column
-  mysql_map.set(1054, fn(msg) { InvalidDataAccessResourceUsageException("未知列: " + msg) })
-  
+  mysql_map.set(1054, fn(msg) {
+    InvalidDataAccessResourceUsageException("未知列: " + msg)
+  })
+
   // 1062: Duplicate entry（唯一约束冲突）
-  mysql_map.set(1062, fn(msg) { DataIntegrityViolationException("重复条目: " + msg) })
-  
+  mysql_map.set(1062, fn(msg) {
+    DataIntegrityViolationException("重复条目: " + msg)
+  })
+
   // 1064: SQL syntax error
-  mysql_map.set(1064, fn(msg) { InvalidDataAccessResourceUsageException("SQL 语法错误: " + msg) })
-  
+  mysql_map.set(1064, fn(msg) {
+    InvalidDataAccessResourceUsageException("SQL 语法错误: " + msg)
+  })
+
   // 1146: Table doesn't exist
-  mysql_map.set(1146, fn(msg) { InvalidDataAccessResourceUsageException("表不存在: " + msg) })
-  
+  mysql_map.set(1146, fn(msg) {
+    InvalidDataAccessResourceUsageException("表不存在: " + msg)
+  })
+
   // 1205: Lock wait timeout exceeded
-  mysql_map.set(1205, fn(msg) { CannotAcquireLockException("锁等待超时: " + msg) })
-  
+  mysql_map.set(1205, fn(msg) {
+    CannotAcquireLockException("锁等待超时: " + msg)
+  })
+
   // 1213: Deadlock found
-  mysql_map.set(1213, fn(msg) { DeadlockLoserDataAccessException("死锁: " + msg) })
-  
+  mysql_map.set(1213, fn(msg) {
+    DeadlockLoserDataAccessException("死锁: " + msg)
+  })
+
   // 2013: Lost connection to MySQL server
-  mysql_map.set(2013, fn(msg) { TransientDataAccessException("连接丢失: " + msg) })
-  
+  mysql_map.set(2013, fn(msg) {
+    TransientDataAccessException("连接丢失: " + msg)
+  })
+
   // ========== SQLite 错误码映射 ==========
-  
+
   // 1: SQLITE_ERROR（通用错误）
-  sqlite_map.set(1, fn(msg) { InvalidDataAccessResourceUsageException("SQLite 错误: " + msg) })
-  
+  sqlite_map.set(1, fn(msg) {
+    InvalidDataAccessResourceUsageException("SQLite 错误: " + msg)
+  })
+
   // 2: SQLITE_INTERNAL（内部错误）
-  sqlite_map.set(2, fn(msg) { DataAccessException("SQLite 内部错误: " + msg) })
-  
+  sqlite_map.set(2, fn(msg) {
+    DataAccessException("SQLite 内部错误: " + msg)
+  })
+
   // 3: SQLITE_PERM（权限错误）
-  sqlite_map.set(3, fn(msg) { InvalidDataAccessResourceUsageException("权限错误: " + msg) })
-  
+  sqlite_map.set(3, fn(msg) {
+    InvalidDataAccessResourceUsageException("权限错误: " + msg)
+  })
+
   // 4: SQLITE_ABORT（操作中止）
-  sqlite_map.set(4, fn(msg) { TransientDataAccessException("操作中止: " + msg) })
-  
+  sqlite_map.set(4, fn(msg) {
+    TransientDataAccessException("操作中止: " + msg)
+  })
+
   // 5: SQLITE_BUSY（数据库被锁定）
-  sqlite_map.set(5, fn(msg) { CannotAcquireLockException("数据库被锁定: " + msg) })
-  
+  sqlite_map.set(5, fn(msg) {
+    CannotAcquireLockException("数据库被锁定: " + msg)
+  })
+
   // 6: SQLITE_LOCKED（表被锁定）
-  sqlite_map.set(6, fn(msg) { CannotAcquireLockException("表被锁定: " + msg) })
-  
+  sqlite_map.set(6, fn(msg) {
+    CannotAcquireLockException("表被锁定: " + msg)
+  })
+
   // 8: SQLITE_READONLY（数据库只读）
-  sqlite_map.set(8, fn(msg) { InvalidDataAccessResourceUsageException("数据库只读: " + msg) })
-  
+  sqlite_map.set(8, fn(msg) {
+    InvalidDataAccessResourceUsageException("数据库只读: " + msg)
+  })
+
   // 11: SQLITE_CORRUPT（数据库损坏）
   sqlite_map.set(11, fn(msg) { DataAccessException("数据库损坏: " + msg) })
-  
+
   // 19: SQLITE_CONSTRAINT（约束违反）
-  sqlite_map.set(19, fn(msg) { DataIntegrityViolationException("约束违反: " + msg) })
-  
+  sqlite_map.set(19, fn(msg) {
+    DataIntegrityViolationException("约束违反: " + msg)
+  })
+
   // 20: SQLITE_MISMATCH（数据类型不匹配）
-  sqlite_map.set(20, fn(msg) { InvalidDataAccessResourceUsageException("数据类型不匹配: " + msg) })
-  
+  sqlite_map.set(20, fn(msg) {
+    InvalidDataAccessResourceUsageException("数据类型不匹配: " + msg)
+  })
+
   // 21: SQLITE_MISUSE（API 使用错误）
-  sqlite_map.set(21, fn(msg) { InvalidDataAccessResourceUsageException("API 使用错误: " + msg) })
-  
+  sqlite_map.set(21, fn(msg) {
+    InvalidDataAccessResourceUsageException("API 使用错误: " + msg)
+  })
+
   // 23: SQLITE_AUTH（授权失败）
-  sqlite_map.set(23, fn(msg) { InvalidDataAccessResourceUsageException("授权失败: " + msg) })
-  
+  sqlite_map.set(23, fn(msg) {
+    InvalidDataAccessResourceUsageException("授权失败: " + msg)
+  })
   { mysql_error_map: mysql_map, sqlite_error_map: sqlite_map }
 }
 
 // ========== 错误码转换方法 ==========
 
+///|
 /// 转换 MySQL 错误码
 /// 
 /// 参数：
@@ -113,14 +154,18 @@ pub fn SQLErrorCodeTranslator::new() -> SQLErrorCodeTranslator {
 pub fn SQLErrorCodeTranslator::translate_mysql_error(
   self : SQLErrorCodeTranslator,
   error_code : Int,
-  error_message : String
+  error_message : String,
 ) -> DataAccessException {
   match self.mysql_error_map.get(error_code) {
     Some(translator) => translator(error_message)
-    None => DataAccessException("MySQL错误 " + error_code.to_string() + ": " + error_message)
+    None =>
+      DataAccessException(
+        "MySQL错误 " + error_code.to_string() + ": " + error_message,
+      )
   }
 }
 
+///|
 /// 转换 SQLite 错误码
 /// 
 /// 参数：
@@ -132,14 +177,18 @@ pub fn SQLErrorCodeTranslator::translate_mysql_error(
 pub fn SQLErrorCodeTranslator::translate_sqlite_error(
   self : SQLErrorCodeTranslator,
   error_code : Int,
-  error_message : String
+  error_message : String,
 ) -> DataAccessException {
   match self.sqlite_error_map.get(error_code) {
     Some(translator) => translator(error_message)
-    None => DataAccessException("SQLite错误 " + error_code.to_string() + ": " + error_message)
+    None =>
+      DataAccessException(
+        "SQLite错误 " + error_code.to_string() + ": " + error_message,
+      )
   }
 }
 
+///|
 /// 从错误消息中提取错误码（MySQL）
 /// 
 /// 简化实现：从错误消息中尝试提取错误码
@@ -184,6 +233,7 @@ fn extract_mysql_error_code(error_message : String) -> Int? {
   }
 }
 
+///|
 /// 从错误消息中提取错误码（SQLite）
 fn extract_sqlite_error_code(error_message : String) -> Int? {
   // SQLite 错误消息格式通常是：SQLITE_CONSTRAINT: UNIQUE constraint failed
@@ -202,10 +252,11 @@ fn extract_sqlite_error_code(error_message : String) -> Int? {
   }
 }
 
+///|
 /// 转换 MySQL 错误消息（自动提取错误码）
 pub fn SQLErrorCodeTranslator::translate_mysql_error_message(
   self : SQLErrorCodeTranslator,
-  error_message : String
+  error_message : String,
 ) -> DataAccessException {
   match extract_mysql_error_code(error_message) {
     Some(error_code) => self.translate_mysql_error(error_code, error_message)
@@ -213,14 +264,14 @@ pub fn SQLErrorCodeTranslator::translate_mysql_error_message(
   }
 }
 
+///|
 /// 转换 SQLite 错误消息（自动提取错误码）
 pub fn SQLErrorCodeTranslator::translate_sqlite_error_message(
   self : SQLErrorCodeTranslator,
-  error_message : String
+  error_message : String,
 ) -> DataAccessException {
   match extract_sqlite_error_code(error_message) {
     Some(error_code) => self.translate_sqlite_error(error_code, error_message)
     None => DataAccessException("SQLite错误: " + error_message)
   }
 }
-

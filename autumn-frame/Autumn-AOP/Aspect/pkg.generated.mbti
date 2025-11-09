@@ -1,0 +1,52 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Aspect"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Advice"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Pointcut"
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct Aspect {
+  name : String
+  pointcut_name : String
+  advice_name : String
+  order : Int
+}
+fn Aspect::get_advice_name(Self) -> String
+fn Aspect::get_name(Self) -> String
+fn Aspect::get_order(Self) -> Int
+fn Aspect::get_pointcut_name(Self) -> String
+fn Aspect::new(String, String, String, Int) -> Self
+fn Aspect::to_string(Self) -> String
+
+pub struct AspectRegistry {
+  aspects : @hashmap.HashMap[String, Aspect]
+  pointcuts : @hashmap.HashMap[String, @Pointcut.Pointcut]
+  advices : @hashmap.HashMap[String, @Advice.Advice]
+  bean_aspects : @hashmap.HashMap[String, Array[String]]
+  method_aspects : @hashmap.HashMap[String, @hashmap.HashMap[String, Array[String]]]
+}
+fn AspectRegistry::add_aspect_to_bean(Self, String, String) -> Unit
+fn AspectRegistry::add_aspect_to_method(Self, String, String, String) -> Unit
+fn AspectRegistry::find_advice(Self, String) -> @Advice.Advice?
+fn AspectRegistry::find_aspect(Self, String) -> Aspect?
+fn AspectRegistry::find_matching_aspects(Self, String, String, String) -> Array[String]
+fn AspectRegistry::find_pointcut(Self, String) -> @Pointcut.Pointcut?
+fn AspectRegistry::get_all_aspects(Self) -> Array[Aspect]
+fn AspectRegistry::get_bean_aspects(Self, String) -> Array[String]
+fn AspectRegistry::get_method_aspects(Self, String, String) -> Array[String]
+fn AspectRegistry::new() -> Self
+fn AspectRegistry::register_advice(Self, String, @Advice.Advice) -> Unit
+fn AspectRegistry::register_aspect(Self, Aspect) -> Unit
+fn AspectRegistry::register_pointcut(Self, String, @Pointcut.Pointcut) -> Unit
+
+// Type aliases
+
+// Traits
+

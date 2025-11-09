@@ -1,0 +1,41 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Pointcut"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Pointcut {
+  name : String
+  pattern : PointcutPattern
+  order : Int
+}
+fn Pointcut::all_methods(String, Int) -> Self
+fn Pointcut::annotation(String, String, Int) -> Self
+fn Pointcut::class_pattern(String, String, Int) -> Self
+fn Pointcut::get_name(Self) -> String
+fn Pointcut::get_order(Self) -> Int
+fn Pointcut::get_pattern(Self) -> PointcutPattern
+fn Pointcut::matches(Self, String, String, String) -> Bool
+fn Pointcut::method_name(String, String, Int) -> Self
+fn Pointcut::method_pattern(String, String, Int) -> Self
+fn Pointcut::new(String, PointcutPattern, Int) -> Self
+impl Eq for Pointcut
+impl Show for Pointcut
+
+pub enum PointcutPattern {
+  AllMethods
+  MethodName(String)
+  MethodPattern(String)
+  ClassPattern(String)
+  Annotation(String)
+  Expression(String)
+}
+impl Eq for PointcutPattern
+impl Show for PointcutPattern
+
+// Type aliases
+
+// Traits
+

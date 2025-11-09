@@ -1,0 +1,233 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-JDBC/JdbcTemplate"
+
+import(
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+fn build_json_request(String, Array[String]) -> String
+
+fn id_mapper(@hashmap.HashMap[String, String]) -> String
+
+fn mysql_close_ffi(Int) -> Int
+
+fn mysql_connect_ffi(String, Int, String, String, String) -> Int
+
+fn mysql_errmsg_ffi(Int) -> String
+
+fn mysql_execute_ffi(Int, String) -> Int
+
+fn mysql_query_ffi(Int, String, Array[String]) -> FixedArray[String]
+
+fn parse_json_response(String) -> @hashmap.HashMap[String, String]?
+
+fn parse_sql(String) -> SqlStatement?
+
+fn pg_close_ffi(Int) -> Int
+
+fn pg_connect_ffi(String, Int, String, String, String) -> Int
+
+fn pg_errmsg_ffi(Int) -> String
+
+fn pg_execute_ffi(Int, String, Array[String]) -> Int
+
+fn pg_query_ffi(Int, String, Array[String]) -> Array[String]
+
+fn simple_row_mapper(@hashmap.HashMap[String, String]) -> String
+
+fn sqlite3_close_ffi(Int) -> Int
+
+fn sqlite3_errmsg_ffi(Int) -> String
+
+fn sqlite3_exec_ffi(Int, String) -> Int
+
+fn sqlite3_exec_prepared_ffi(Int, String, Array[String]) -> Int
+
+fn sqlite3_open_ffi(String) -> Int
+
+fn sqlite3_query_ffi(Int, String, Array[String]) -> FixedArray[String]
+
+// Errors
+
+// Types and methods
+pub struct Connection {
+  connection_id : String
+}
+fn Connection::get_id(Self) -> String
+fn Connection::new(String) -> Self
+
+pub enum DataAccessException {
+  DataAccessException(String)
+  InvalidDataAccessResourceUsageException(String)
+  DataRetrievalFailureException(String)
+  DataIntegrityViolationException(String)
+  CannotAcquireLockException(String)
+  DeadlockLoserDataAccessException(String)
+  QueryTimeoutException(String)
+  TransientDataAccessException(String)
+}
+fn DataAccessException::get_message(Self) -> String
+fn DataAccessException::is_transient(Self) -> Bool
+fn DataAccessException::to_string(Self) -> String
+impl Eq for DataAccessException
+impl Show for DataAccessException
+
+pub struct FFIDataSource {
+  config : FFIDataSourceConfig
+  db : Int?
+  is_connected : Bool
+}
+fn FFIDataSource::batch_execute(Self, String, Array[Array[String]]) -> Array[Int]?
+fn FFIDataSource::connect(Self) -> Self
+fn FFIDataSource::disconnect(Self) -> Self
+fn FFIDataSource::execute(Self, String) -> Int?
+fn FFIDataSource::new(FFIDataSourceConfig) -> Self
+fn FFIDataSource::query(Self, String, (@hashmap.HashMap[String, String]) -> String) -> Array[String]?
+
+pub struct FFIDataSourceConfig {
+  database_url : String
+}
+fn FFIDataSourceConfig::new(String) -> Self
+impl Eq for FFIDataSourceConfig
+impl Show for FFIDataSourceConfig
+
+pub struct HttpDataSource {
+  config : HttpDataSourceConfig
+}
+async fn HttpDataSource::async_batch_execute(Self, String, Array[Array[String]]) -> Array[Int]
+async fn HttpDataSource::async_execute(Self, String, Array[String]) -> Int
+async fn HttpDataSource::async_query(Self, String, Array[String], (@hashmap.HashMap[String, String]) -> String) -> String?
+fn HttpDataSource::batch_execute(Self, String, Array[Array[String]]) -> Array[Int]
+fn HttpDataSource::execute(Self, String, Array[String]) -> Int
+fn HttpDataSource::new(HttpDataSourceConfig) -> Self
+fn HttpDataSource::query(Self, String, Array[String], (@hashmap.HashMap[String, String]) -> String) -> String?
+
+pub struct HttpDataSourceConfig {
+  base_url : String
+  timeout : Int
+  headers : @hashmap.HashMap[String, String]
+}
+fn HttpDataSourceConfig::new(String) -> Self
+impl Eq for HttpDataSourceConfig
+impl Show for HttpDataSourceConfig
+
+pub struct JdbcTemplate {
+  data_source_fn : () -> Connection
+  mut database_ref : MemoryDatabase?
+}
+fn JdbcTemplate::batch_update(Self, String, Array[Array[String]]) -> Array[Int]
+fn JdbcTemplate::execute(Self, String, Array[String]) -> Int
+fn JdbcTemplate::new(() -> Connection) -> Self
+fn JdbcTemplate::new_with_memory_database(MemoryDatabase) -> Self
+fn JdbcTemplate::query(Self, String, Array[String], (@hashmap.HashMap[String, String]) -> String) -> String?
+fn JdbcTemplate::query_for_list(Self, String, Array[String], (@hashmap.HashMap[String, String]) -> String) -> Array[String]
+fn JdbcTemplate::query_for_scalar(Self, String, Array[String]) -> String?
+fn JdbcTemplate::update(Self, String, Array[String]) -> Int
+
+pub struct MemoryDataSource {
+  database : MemoryDatabase
+  current_transaction_id : String?
+}
+fn MemoryDataSource::get_connection(Self) -> Connection
+fn MemoryDataSource::get_database(Self) -> MemoryDatabase
+fn MemoryDataSource::new(MemoryDatabase) -> Self
+fn MemoryDataSource::set_transaction_id(Self, String?) -> Self
+
+pub struct MemoryDatabase {
+  tables : @hashmap.HashMap[String, @hashmap.HashMap[String, @hashmap.HashMap[String, String]]]
+  transactions : @hashmap.HashMap[String, TransactionSnapshot]
+  row_id_counter : Int
+}
+fn MemoryDatabase::begin_transaction(Self, String) -> Self
+fn MemoryDatabase::commit_transaction(Self, String) -> Self
+fn MemoryDatabase::execute(Self, String, Array[String]) -> (Int, Self)
+fn MemoryDatabase::execute_delete(Self, String, String?, Array[String]) -> (Int, Self)
+fn MemoryDatabase::execute_insert(Self, String, Array[String], Array[String]) -> (Int, Self)
+fn MemoryDatabase::execute_select(Self, String, Array[String], String?, Array[String]) -> Array[@hashmap.HashMap[String, String]]
+fn MemoryDatabase::execute_update(Self, String, Array[(String, String)], String?, Array[String]) -> (Int, Self)
+fn MemoryDatabase::get_row_id_counter(Self) -> Int
+fn MemoryDatabase::has_transaction(Self, String) -> Bool
+fn MemoryDatabase::new() -> Self
+fn MemoryDatabase::query(Self, String, Array[String]) -> Array[@hashmap.HashMap[String, String]]
+fn MemoryDatabase::rollback_transaction(Self, String) -> Self
+fn MemoryDatabase::set_row_id_counter(Self, Int) -> Self
+
+pub struct MySQLDataSource {
+  config : MySQLDataSourceConfig
+  db : Int?
+  is_connected : Bool
+}
+fn MySQLDataSource::connect(Self) -> Self
+fn MySQLDataSource::disconnect(Self) -> Self
+fn MySQLDataSource::execute(Self, String) -> Int?
+fn MySQLDataSource::new(MySQLDataSourceConfig) -> Self
+fn MySQLDataSource::query(Self, String, (@hashmap.HashMap[String, String]) -> String) -> Array[String]?
+
+pub struct MySQLDataSourceConfig {
+  host : String
+  port : Int
+  user : String
+  password : String
+  database : String
+}
+fn MySQLDataSourceConfig::new(String, Int, String, String, String) -> Self
+impl Eq for MySQLDataSourceConfig
+impl Show for MySQLDataSourceConfig
+
+pub struct NamedParameterJdbcTemplate {
+  jdbc_template : JdbcTemplate
+}
+fn NamedParameterJdbcTemplate::batch_update(Self, String, Array[@hashmap.HashMap[String, String]]) -> Array[Int]
+fn NamedParameterJdbcTemplate::execute(Self, String, @hashmap.HashMap[String, String]) -> Int
+fn NamedParameterJdbcTemplate::new(JdbcTemplate) -> Self
+fn NamedParameterJdbcTemplate::query(Self, String, @hashmap.HashMap[String, String], (@hashmap.HashMap[String, String]) -> String) -> String?
+fn NamedParameterJdbcTemplate::query_for_list(Self, String, @hashmap.HashMap[String, String], (@hashmap.HashMap[String, String]) -> String) -> Array[String]
+fn NamedParameterJdbcTemplate::query_for_scalar(Self, String, @hashmap.HashMap[String, String]) -> String?
+fn NamedParameterJdbcTemplate::update(Self, String, @hashmap.HashMap[String, String]) -> Int
+
+pub struct SQLErrorCodeTranslator {
+  mysql_error_map : @hashmap.HashMap[Int, (String) -> DataAccessException]
+  sqlite_error_map : @hashmap.HashMap[Int, (String) -> DataAccessException]
+}
+fn SQLErrorCodeTranslator::new() -> Self
+fn SQLErrorCodeTranslator::translate_mysql_error(Self, Int, String) -> DataAccessException
+fn SQLErrorCodeTranslator::translate_mysql_error_message(Self, String) -> DataAccessException
+fn SQLErrorCodeTranslator::translate_sqlite_error(Self, Int, String) -> DataAccessException
+fn SQLErrorCodeTranslator::translate_sqlite_error_message(Self, String) -> DataAccessException
+
+pub struct SimpleDataSource {
+  connection_string : String
+}
+fn SimpleDataSource::get_connection(Self) -> Connection
+fn SimpleDataSource::new(String) -> Self
+
+pub enum SqlStatement {
+  Insert(String, Array[String], Array[String])
+  Select(String, Array[String], String?)
+  Update(String, Array[(String, String)], String?)
+  Delete(String, String?)
+}
+
+pub struct TransactionSnapshot {
+  tables : @hashmap.HashMap[String, @hashmap.HashMap[String, @hashmap.HashMap[String, String]]]
+}
+fn TransactionSnapshot::new(@hashmap.HashMap[String, @hashmap.HashMap[String, @hashmap.HashMap[String, String]]]) -> Self
+
+// Type aliases
+pub type DataSource = () -> Connection
+
+pub type ErrorCodeTranslator = (String) -> DataAccessException
+
+pub type MysqlHandle = Int
+
+pub type PgHandle = Int
+
+pub type Row = @hashmap.HashMap[String, String]
+
+pub type RowMapper = (@hashmap.HashMap[String, String]) -> String
+
+pub type SqliteHandle = Int
+
+// Traits
+

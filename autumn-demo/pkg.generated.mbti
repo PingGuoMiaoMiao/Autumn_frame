@@ -1,0 +1,37 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-demo"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Controller"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Http"
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+fn extract_login_info(@Http.HttpRequest) -> (String?, String?)
+
+fn handle_login(@Http.HttpRequest) -> @Controller.JsonResponse
+
+fn handle_logout(@Http.HttpRequest) -> @Controller.JsonResponse
+
+fn parse_form_data(String) -> @hashmap.HashMap[String, String]
+
+fn parse_json_data(String) -> @hashmap.HashMap[String, String]
+
+fn validate_login(String, String) -> Bool
+
+// Errors
+
+// Types and methods
+pub struct LoginResult {
+  success : Bool
+  message : String
+  token : String?
+}
+fn LoginResult::failure(String) -> Self
+fn LoginResult::success(String, String?) -> Self
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,32 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Boot"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Dispatcher"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct BootApplication {
+  port : Int
+  dispatcher_factory : () -> @Dispatcher.DispatcherServlet
+}
+fn BootApplication::new(Int, () -> @Dispatcher.DispatcherServlet) -> Self
+fn BootApplication::run(Int, () -> @Dispatcher.DispatcherServlet) -> Unit
+fn BootApplication::run_default(() -> @Dispatcher.DispatcherServlet) -> Unit
+fn BootApplication::run_with_config(BootApplicationConfig) -> Unit
+
+pub struct BootApplicationConfig {
+  port : Int
+  dispatcher_factory : () -> @Dispatcher.DispatcherServlet
+}
+fn BootApplicationConfig::new(Int, () -> @Dispatcher.DispatcherServlet) -> Self
+fn BootApplicationConfig::with_default_port(() -> @Dispatcher.DispatcherServlet) -> Self
+
+// Type aliases
+
+// Traits
+

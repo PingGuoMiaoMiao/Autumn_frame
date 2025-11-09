@@ -1,0 +1,42 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/ResourceResolver"
+
+import(
+  "moonbitlang/core/list"
+)
+
+// Values
+fn join_path(String, String) -> String
+
+fn normalize_path(String) -> String
+
+fn remove_leading_slash(String) -> String
+
+fn remove_trailing_slash(String) -> String
+
+fn url_decode(String) -> String
+
+fn url_encode(String) -> String
+
+// Errors
+
+// Types and methods
+pub struct Resource {
+  path : String
+  name : String
+}
+fn Resource::new(String, String) -> Self
+
+pub struct ResourceResolver {
+  base_package : String
+  debug : Bool
+}
+fn ResourceResolver::new(String) -> Self
+fn[T] ResourceResolver::scan(Self, (Resource) -> T?) -> @list.List[T]
+fn[T] ResourceResolver::scan_paths(Self, @list.List[String], (Resource) -> T?) -> @list.List[T]
+fn ResourceResolver::with_debug(Self, Bool) -> Self
+
+// Type aliases
+
+// Traits
+

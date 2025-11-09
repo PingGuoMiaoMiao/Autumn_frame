@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Integration"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Advice"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Aspect"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Pointcut"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Proxy"
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct AopIntegration {
+  aspect_registry : @Aspect.AspectRegistry
+  proxy_factory : @Proxy.ProxyFactory
+}
+fn AopIntegration::create_proxy_if_needed(Self, @hashmap.HashMap[String, String], String, String, Array[String]) -> Unit
+fn AopIntegration::get_aspect_registry(Self) -> @Aspect.AspectRegistry
+fn AopIntegration::get_proxy(Self, String) -> @Proxy.ProxyBean?
+fn AopIntegration::get_proxy_factory(Self) -> @Proxy.ProxyFactory
+fn AopIntegration::new() -> Self
+fn AopIntegration::register_advice(Self, String, @Advice.Advice) -> Unit
+fn AopIntegration::register_aspect(Self, @Aspect.Aspect) -> Unit
+fn AopIntegration::register_pointcut(Self, String, @Pointcut.Pointcut) -> Unit
+
+// Type aliases
+
+// Traits
+

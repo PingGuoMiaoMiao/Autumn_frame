@@ -1,0 +1,38 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Filter"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Http"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct FilterRegistrationBean {
+  name : String
+  filter_func : (@Http.HttpRequest, @Http.HttpResponse?, () -> @Http.HttpResponse) -> @Http.HttpResponse
+  url_patterns : Array[String]
+  order : Int
+}
+fn FilterRegistrationBean::add_url_pattern(Self, String) -> Self
+fn FilterRegistrationBean::add_url_patterns(Self, Array[String]) -> Self
+fn FilterRegistrationBean::get_filter_func(Self) -> (@Http.HttpRequest, @Http.HttpResponse?, () -> @Http.HttpResponse) -> @Http.HttpResponse
+fn FilterRegistrationBean::get_name(Self) -> String
+fn FilterRegistrationBean::get_order(Self) -> Int
+fn FilterRegistrationBean::get_url_patterns(Self) -> Array[String]
+fn FilterRegistrationBean::matches_url(Self, String) -> Bool
+fn FilterRegistrationBean::new(String, (@Http.HttpRequest, @Http.HttpResponse?, () -> @Http.HttpResponse) -> @Http.HttpResponse) -> Self
+fn FilterRegistrationBean::set_order(Self, Int) -> Self
+
+// Type aliases
+pub type FilterChain = () -> @Http.HttpResponse
+
+pub type FilterFunc = (@Http.HttpRequest, @Http.HttpResponse?, () -> @Http.HttpResponse) -> @Http.HttpResponse
+
+// Traits
+pub trait Filter {
+  do_filter(Self, @Http.HttpRequest, @Http.HttpResponse?, () -> @Http.HttpResponse) -> @Http.HttpResponse
+}
+

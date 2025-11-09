@@ -1,0 +1,39 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Exception"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Http"
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub enum ApplicationException {
+  NotFoundException(String)
+  ValidationException(String)
+  UnauthorizedException(String)
+  ForbiddenException(String)
+  InternalServerErrorException(String)
+  CustomException(String, String)
+}
+fn ApplicationException::get_message(Self) -> String
+fn ApplicationException::get_type(Self) -> String
+
+pub struct ExceptionHandler {
+  handlers : @hashmap.HashMap[String, (ApplicationException, @Http.HttpRequest) -> @Http.HttpResponse]
+  default_handler : ((ApplicationException, @Http.HttpRequest) -> @Http.HttpResponse)?
+}
+fn ExceptionHandler::create_default() -> Self
+fn ExceptionHandler::handle_exception(Self, ApplicationException, @Http.HttpRequest) -> @Http.HttpResponse
+fn ExceptionHandler::new() -> Self
+fn ExceptionHandler::register_handler(Self, String, (ApplicationException, @Http.HttpRequest) -> @Http.HttpResponse) -> Self
+fn ExceptionHandler::set_default_handler(Self, (ApplicationException, @Http.HttpRequest) -> @Http.HttpResponse) -> Self
+
+// Type aliases
+pub type ExceptionHandlerFunc = (ApplicationException, @Http.HttpRequest) -> @Http.HttpResponse
+
+// Traits
+

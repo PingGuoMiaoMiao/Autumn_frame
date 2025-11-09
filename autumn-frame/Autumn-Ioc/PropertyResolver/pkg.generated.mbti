@@ -1,0 +1,139 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/PropertyResolver"
+
+import(
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct PropertyPerformanceStats {
+  total_queries : Int
+  cache_hits : Int
+  average_query_time : Int
+  memory_usage : Int
+  index_size : Int
+}
+impl Default for PropertyPerformanceStats
+impl Eq for PropertyPerformanceStats
+impl Show for PropertyPerformanceStats
+
+pub struct PropertyResolver {
+  properties : @hashmap.HashMap[String, String]
+  converters : @hashmap.HashMap[String, (String) -> String]
+}
+fn PropertyResolver::contains_property(Self, String) -> Bool
+fn PropertyResolver::from_array(Array[(String, String)]) -> Self
+fn PropertyResolver::get_property(Self, String) -> String?
+fn PropertyResolver::get_property_bool(Self, String) -> Bool?
+fn PropertyResolver::get_property_double(Self, String) -> Double?
+fn PropertyResolver::get_property_int(Self, String) -> Int?
+fn PropertyResolver::get_property_names(Self) -> Array[String]
+fn PropertyResolver::get_property_or_default(Self, String, String) -> String
+fn PropertyResolver::get_required_property(Self, String) -> String?
+fn PropertyResolver::new(@hashmap.HashMap[String, String]) -> Self
+fn PropertyResolver::register_converter(Self, String, (String) -> String) -> Unit
+fn PropertyResolver::set_property(Self, String, String) -> Unit
+
+// Type aliases
+
+// Traits
+pub trait PropertyCache {
+  cache_property(Self, String, String) -> Unit
+  get_cached_property(Self, String) -> String?
+  clear_cache(Self) -> Unit
+  is_cached(Self, String) -> Bool
+}
+
+pub trait PropertyEncryption {
+  encrypt_property(Self, String, String) -> String
+  decrypt_property(Self, String) -> String?
+  is_encrypted(Self, String) -> Bool
+  set_encryption_key(Self, String) -> Unit
+}
+
+pub trait PropertyEnvironment {
+  get_environment_variable(Self, String) -> String?
+  set_environment_variable(Self, String, String) -> Unit
+  merge_environment(Self) -> Unit
+  get_environment_prefix(Self) -> String
+}
+
+pub trait PropertyExpressionParser {
+  parse_expression(Self, String) -> String
+  has_expression(Self, String) -> Bool
+  resolve_expressions(Self, String) -> String
+  get_expression_variables(Self, String) -> Array[String]
+}
+
+pub trait PropertyListener {
+  on_property_changed(Self, String, String, String) -> Unit
+  add_property_listener(Self, String) -> Unit
+  remove_property_listener(Self, String) -> Unit
+}
+
+pub trait PropertyPerformanceManager {
+  optimize_access(Self) -> Unit
+  get_access_performance(Self) -> PropertyPerformanceStats
+  enable_indexing(Self, Bool) -> Unit
+}
+
+pub trait PropertyPriority {
+  set_property_priority(Self, String, Int) -> Unit
+  get_property_priority(Self, String) -> Int
+  resolve_priority_conflict(Self, String) -> String
+  get_priority_sources(Self) -> Array[String]
+}
+
+pub trait PropertyReader {
+  get_property(Self, String) -> String?
+  get_required_property(Self, String) -> String?
+  get_property_or_default(Self, String, String) -> String
+  contains_property(Self, String) -> Bool
+}
+
+pub trait PropertySerializable {
+  serialize_properties(Self) -> String
+  deserialize_properties(Self, String) -> Bool
+  export_to_file(Self, String) -> Bool
+  import_from_file(Self, String) -> Bool
+}
+
+pub trait PropertyStatistics {
+  get_property_count(Self) -> Int
+  get_property_names(Self) -> Array[String]
+  get_property_types(Self) -> Array[String]
+  get_memory_usage(Self) -> Int
+}
+
+pub trait PropertyTemplate {
+  process_template(Self, String) -> String
+  has_template_variables(Self, String) -> Bool
+  get_template_variables(Self, String) -> Array[String]
+  render_template(Self, String, Array[(String, String)]) -> String
+}
+
+pub trait PropertyTypeConverter {
+  get_property_int(Self, String) -> Int?
+  get_property_bool(Self, String) -> Bool?
+  get_property_double(Self, String) -> Double?
+  convert_to_string(Self, String) -> String?
+}
+
+pub trait PropertyValidator {
+  validate_property(Self, String, String) -> Bool
+  validate_all_properties(Self) -> Bool
+  get_validation_errors(Self) -> Array[String]
+  is_valid_key(Self, String) -> Bool
+}
+
+pub trait PropertyWriter {
+  set_property(Self, String, String) -> Unit
+  remove_property(Self, String) -> Unit
+  clear_properties(Self) -> Unit
+  update_property(Self, String, String) -> Unit
+}
+

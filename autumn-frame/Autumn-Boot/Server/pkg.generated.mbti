@@ -1,0 +1,59 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Boot/Server"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Dispatcher"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Http"
+)
+
+// Values
+fn autumn_accept_connection(Int) -> Int
+
+fn autumn_close_connection(Int) -> Unit
+
+fn autumn_close_server(Int) -> Unit
+
+fn autumn_create_server_socket(Int) -> Int
+
+fn autumn_get_request_byte(Int) -> Int
+
+fn autumn_get_request_length() -> Int
+
+fn autumn_read_request(Int) -> Int
+
+fn autumn_send_response(Int, String, Int) -> Int
+
+// Errors
+
+// Types and methods
+pub struct AsyncServer {
+  port : Int
+  dispatcher : @Dispatcher.DispatcherServlet
+  mut running : Bool
+}
+fn AsyncServer::get_port(Self) -> Int
+fn AsyncServer::is_running(Self) -> Bool
+fn AsyncServer::new(Int, @Dispatcher.DispatcherServlet) -> Self
+async fn AsyncServer::start(Self) -> Unit
+fn AsyncServer::stop(Self) -> Unit
+
+pub struct EmbeddedServer {
+  port : Int
+  dispatcher : @Dispatcher.DispatcherServlet
+  mut running : Bool
+}
+fn EmbeddedServer::format_response(@Http.HttpResponse) -> String
+fn EmbeddedServer::new(Int, @Dispatcher.DispatcherServlet) -> Self
+fn EmbeddedServer::parse_request(String) -> @Http.HttpRequest?
+impl Server for EmbeddedServer
+
+// Type aliases
+
+// Traits
+pub trait Server {
+  start(Self) -> Unit
+  stop(Self) -> Unit
+  is_running(Self) -> Bool
+  get_port(Self) -> Int
+}
+

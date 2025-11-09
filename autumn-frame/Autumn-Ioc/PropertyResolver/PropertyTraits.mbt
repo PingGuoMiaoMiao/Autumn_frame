@@ -2,6 +2,7 @@
 /// 
 /// 这个文件定义了配置管理相关的特征，用于抽象配置功能
 
+///|
 /// 配置读取器特征 - 读取配置属性
 pub trait PropertyReader {
   get_property(Self, String) -> String?
@@ -10,6 +11,7 @@ pub trait PropertyReader {
   contains_property(Self, String) -> Bool
 }
 
+///|
 /// 配置写入器特征 - 写入配置属性
 pub trait PropertyWriter {
   set_property(Self, String, String) -> Unit
@@ -18,6 +20,7 @@ pub trait PropertyWriter {
   update_property(Self, String, String) -> Unit
 }
 
+///|
 /// 类型转换器特征 - 转换配置值的类型
 pub trait PropertyTypeConverter {
   get_property_int(Self, String) -> Int?
@@ -26,6 +29,7 @@ pub trait PropertyTypeConverter {
   convert_to_string(Self, String) -> String?
 }
 
+///|
 /// 配置验证特征 - 验证配置的有效性
 pub trait PropertyValidator {
   validate_property(Self, String, String) -> Bool
@@ -34,6 +38,7 @@ pub trait PropertyValidator {
   is_valid_key(Self, String) -> Bool
 }
 
+///|
 /// 配置表达式解析特征 - 解析配置表达式
 pub trait PropertyExpressionParser {
   parse_expression(Self, String) -> String
@@ -42,6 +47,7 @@ pub trait PropertyExpressionParser {
   get_expression_variables(Self, String) -> Array[String]
 }
 
+///|
 /// 配置缓存特征 - 缓存配置值
 pub trait PropertyCache {
   cache_property(Self, String, String) -> Unit
@@ -50,6 +56,7 @@ pub trait PropertyCache {
   is_cached(Self, String) -> Bool
 }
 
+///|
 /// 配置监听特征 - 监听配置变化
 pub trait PropertyListener {
   on_property_changed(Self, String, String, String) -> Unit
@@ -57,6 +64,7 @@ pub trait PropertyListener {
   remove_property_listener(Self, String) -> Unit
 }
 
+///|
 /// 配置统计特征 - 提供配置统计信息
 pub trait PropertyStatistics {
   get_property_count(Self) -> Int
@@ -65,6 +73,7 @@ pub trait PropertyStatistics {
   get_memory_usage(Self) -> Int
 }
 
+///|
 /// 配置序列化特征 - 序列化配置
 pub trait PropertySerializable {
   serialize_properties(Self) -> String
@@ -73,6 +82,7 @@ pub trait PropertySerializable {
   import_from_file(Self, String) -> Bool
 }
 
+///|
 /// 配置加密特征 - 加密敏感配置
 pub trait PropertyEncryption {
   encrypt_property(Self, String, String) -> String
@@ -81,6 +91,7 @@ pub trait PropertyEncryption {
   set_encryption_key(Self, String) -> Unit
 }
 
+///|
 /// 配置环境特征 - 处理环境相关配置
 pub trait PropertyEnvironment {
   get_environment_variable(Self, String) -> String?
@@ -89,6 +100,7 @@ pub trait PropertyEnvironment {
   get_environment_prefix(Self) -> String
 }
 
+///|
 /// 配置优先级特征 - 管理配置优先级
 pub trait PropertyPriority {
   set_property_priority(Self, String, Int) -> Unit
@@ -97,6 +109,7 @@ pub trait PropertyPriority {
   get_priority_sources(Self) -> Array[String]
 }
 
+///|
 /// 配置模板特征 - 处理配置模板
 pub trait PropertyTemplate {
   process_template(Self, String) -> String
@@ -105,6 +118,7 @@ pub trait PropertyTemplate {
   render_template(Self, String, Array[(String, String)]) -> String
 }
 
+///|
 /// 配置性能特征 - 优化配置访问性能
 pub trait PropertyPerformanceManager {
   optimize_access(Self) -> Unit
@@ -112,6 +126,7 @@ pub trait PropertyPerformanceManager {
   enable_indexing(Self, Bool) -> Unit
 }
 
+///|
 /// 配置性能统计结构
 pub struct PropertyPerformanceStats {
   total_queries : Int

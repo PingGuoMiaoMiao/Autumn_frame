@@ -1,0 +1,30 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/View"
+
+import(
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct InternalViewResolver {
+  prefix : String
+  suffix : String
+  cache : @hashmap.HashMap[String, String]
+}
+fn InternalViewResolver::new(String, String) -> Self
+impl ViewResolver for InternalViewResolver
+
+// Type aliases
+pub type ViewData = @hashmap.HashMap[String, String]
+
+pub type ViewName = String
+
+// Traits
+pub trait ViewResolver {
+  resolve_view(Self, String, @hashmap.HashMap[String, String]) -> String
+}
+

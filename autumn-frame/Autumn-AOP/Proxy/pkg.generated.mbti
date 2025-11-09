@@ -1,0 +1,59 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Proxy"
+
+import(
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+fn example_usage() -> Unit
+
+// Errors
+
+// Types and methods
+pub struct FunctionalProxy {
+  before_interceptors : Array[(String, Array[String]) -> Unit]
+  after_interceptors : Array[(String, Array[String]) -> Unit]
+}
+fn FunctionalProxy::add_after(Self, (String, Array[String]) -> Unit) -> Self
+fn FunctionalProxy::add_before(Self, (String, Array[String]) -> Unit) -> Self
+fn FunctionalProxy::new() -> Self
+fn[T] FunctionalProxy::wrap(Self, () -> T, String) -> () -> T
+fn[T] FunctionalProxy::wrap_args(Self, (T) -> Unit, String, (T) -> String) -> (T) -> Unit
+fn[Args, Ret] FunctionalProxy::wrap_full(Self, (Args) -> Ret, String, (Args) -> String) -> (Args) -> Ret
+fn FunctionalProxy::wrap_unit(Self, () -> Unit, String) -> () -> Unit
+
+pub struct MethodInvocation {
+  context : @hashmap.HashMap[String, String]
+  bean_name : String
+  method_name : String
+  args : Array[String]
+  interceptors : Array[(@hashmap.HashMap[String, String], String, String, Array[String], () -> String?) -> String?]
+  current_index : Int
+}
+fn MethodInvocation::new(@hashmap.HashMap[String, String], String, String, Array[String], Array[(@hashmap.HashMap[String, String], String, String, Array[String], () -> String?) -> String?]) -> Self
+fn MethodInvocation::proceed(Self) -> String?
+
+pub struct ProxyBean {
+  target_bean_name : String
+  interceptors : Array[(@hashmap.HashMap[String, String], String, String, Array[String], () -> String?) -> String?]
+}
+fn ProxyBean::new(String, Array[(@hashmap.HashMap[String, String], String, String, Array[String], () -> String?) -> String?]) -> Self
+
+pub struct ProxyFactory {
+  bean_interceptors : @hashmap.HashMap[String, Array[(@hashmap.HashMap[String, String], String, String, Array[String], () -> String?) -> String?]]
+}
+fn ProxyFactory::add_interceptor(Self, String, (@hashmap.HashMap[String, String], String, String, Array[String], () -> String?) -> String?) -> Unit
+fn ProxyFactory::create_proxy(Self, String) -> ProxyBean?
+fn ProxyFactory::get_interceptors(Self, String) -> Array[(@hashmap.HashMap[String, String], String, String, Array[String], () -> String?) -> String?]
+fn ProxyFactory::new() -> Self
+
+// Type aliases
+pub type ApplicationContextRef = @hashmap.HashMap[String, String]
+
+pub type FunctionInterceptor = (String, Array[String]) -> Unit
+
+pub type MethodInterceptor = (@hashmap.HashMap[String, String], String, String, Array[String], () -> String?) -> String?
+
+// Traits
+

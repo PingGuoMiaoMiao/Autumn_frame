@@ -1,0 +1,107 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-JDBC/Transaction"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-JDBC/JdbcTemplate"
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub enum IsolationLevel {
+  Default
+  ReadUncommitted
+  ReadCommitted
+  RepeatableRead
+  Serializable
+}
+impl Eq for IsolationLevel
+impl Show for IsolationLevel
+
+pub enum Propagation {
+  Required
+  Supports
+  Mandatory
+  RequiresNew
+  NotSupported
+  Never
+  Nested
+}
+impl Eq for Propagation
+impl Show for Propagation
+
+pub struct Transaction {
+  transaction_id : String
+  status : TransactionStatus
+}
+fn Transaction::get_id(Self) -> String
+fn Transaction::get_status(Self) -> TransactionStatus
+fn Transaction::new(String, TransactionStatus) -> Self
+
+pub struct TransactionDefinition {
+  isolation_level : IsolationLevel
+  propagation : Propagation
+  timeout : Int?
+  read_only : Bool
+}
+fn TransactionDefinition::default() -> Self
+fn TransactionDefinition::get_isolation_level(Self) -> IsolationLevel
+fn TransactionDefinition::get_propagation(Self) -> Propagation
+fn TransactionDefinition::get_timeout(Self) -> Int?
+fn TransactionDefinition::is_read_only(Self) -> Bool
+fn TransactionDefinition::new(IsolationLevel, Propagation, Int?, Bool) -> Self
+
+pub struct TransactionManager {
+  active_transactions : @hashmap.HashMap[String, Transaction]
+  mut transaction_counter : Int
+}
+fn TransactionManager::begin_transaction(Self, String, TransactionDefinition) -> Transaction
+fn TransactionManager::commit_transaction(Self, String) -> Unit
+fn TransactionManager::get_transaction(Self, String) -> Transaction?
+fn TransactionManager::has_active_transaction(Self, String) -> Bool
+fn TransactionManager::new() -> Self
+fn TransactionManager::rollback_transaction(Self, String) -> Unit
+
+pub enum TransactionResult[T] {
+  Ok(T)
+  Err(String)
+}
+impl[T : Eq] Eq for TransactionResult[T]
+impl[T : Show] Show for TransactionResult[T]
+
+pub enum TransactionStatus {
+  Active
+  Committed
+  RolledBack
+  Unknown
+}
+impl Eq for TransactionStatus
+impl Show for TransactionStatus
+
+pub struct TransactionTemplate {
+  transaction_manager : TransactionManager
+  jdbc_template_fn : () -> @JdbcTemplate.JdbcTemplate
+  default_definition : TransactionDefinition
+}
+fn[T] TransactionTemplate::execute(Self, (() -> @JdbcTemplate.JdbcTemplate) -> T, TransactionDefinition?) -> TransactionResult[T]
+fn TransactionTemplate::get_transaction_status(Self) -> TransactionStatus?
+fn TransactionTemplate::has_active_transaction(Self) -> Bool
+fn TransactionTemplate::new(TransactionManager, () -> @JdbcTemplate.JdbcTemplate, TransactionDefinition) -> Self
+fn TransactionTemplate::set_rollback_only(Self) -> Unit
+
+// Type aliases
+pub type BeginTransaction = (TransactionDefinition) -> Transaction
+
+pub type CommitTransaction = (Transaction) -> Unit
+
+pub type GetTransaction = () -> Transaction?
+
+pub type RollbackTransaction = (Transaction) -> Unit
+
+pub type TransactionCallback[T] = (() -> @JdbcTemplate.JdbcTemplate) -> T
+
+// Traits
+

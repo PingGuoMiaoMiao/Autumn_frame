@@ -1,0 +1,25 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-JDBC/Integration"
+
+import(
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Advice"
+  "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-JDBC/Transaction"
+)
+
+// Values
+fn create_transaction_after_advice(@Transaction.TransactionManager, String) -> @Advice.Advice
+
+fn create_transaction_after_throwing_advice(@Transaction.TransactionManager, String) -> @Advice.Advice
+
+fn create_transaction_before_advice(@Transaction.TransactionManager, String, @Transaction.TransactionDefinition) -> @Advice.Advice
+
+fn register_transaction_aspect(@PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Integration.AopIntegration, @Transaction.TransactionManager, String, Array[String], @Transaction.TransactionDefinition) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

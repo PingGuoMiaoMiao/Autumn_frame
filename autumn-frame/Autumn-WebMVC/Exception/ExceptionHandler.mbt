@@ -15,6 +15,7 @@
 
 // ========== 异常类型 ==========
 
+///|
 /// 应用程序异常
 pub enum ApplicationException {
   /// 未找到资源异常
@@ -28,9 +29,10 @@ pub enum ApplicationException {
   /// 内部服务器错误异常
   InternalServerErrorException(String)
   /// 自定义异常
-  CustomException(String, String)  // (异常类型, 异常消息)
+  CustomException(String, String) // (异常类型, 异常消息)
 }
 
+///|
 /// 获取异常消息
 pub fn ApplicationException::get_message(self : ApplicationException) -> String {
   match self {
@@ -43,6 +45,7 @@ pub fn ApplicationException::get_message(self : ApplicationException) -> String 
   }
 }
 
+///|
 /// 获取异常类型
 pub fn ApplicationException::get_type(self : ApplicationException) -> String {
   match self {
@@ -57,6 +60,7 @@ pub fn ApplicationException::get_type(self : ApplicationException) -> String {
 
 // ========== 异常处理器接口 ==========
 
+///|
 /// 异常处理器函数类型
 /// 
 /// 参数：
@@ -69,40 +73,42 @@ pub type ExceptionHandlerFunc = (ApplicationException, @Http.HttpRequest) -> @Ht
 
 // ========== 异常处理器 ==========
 
+///|
 /// 异常处理器
 /// 
 /// 用于注册和处理不同类型的异常
 pub struct ExceptionHandler {
-  handlers : @hashmap.HashMap[String, ExceptionHandlerFunc]  // 异常类型 -> 处理器函数
-  default_handler : ExceptionHandlerFunc?  // 默认处理器（可选）
+  handlers : @hashmap.HashMap[String, ExceptionHandlerFunc] // 异常类型 -> 处理器函数
+  default_handler : ExceptionHandlerFunc? // 默认处理器（可选）
 }
 
+///|
 /// 创建异常处理器
 pub fn ExceptionHandler::new() -> ExceptionHandler {
-  {
-    handlers: @hashmap.new(),
-    default_handler: None
-  }
+  { handlers: @hashmap.new(), default_handler: None }
 }
 
+///|
 /// 注册异常处理器
 pub fn ExceptionHandler::register_handler(
   self : ExceptionHandler,
   exception_type : String,
-  handler : ExceptionHandlerFunc
+  handler : ExceptionHandlerFunc,
 ) -> ExceptionHandler {
   self.handlers.set(exception_type, handler)
   self
 }
 
+///|
 /// 设置默认异常处理器
 pub fn ExceptionHandler::set_default_handler(
   self : ExceptionHandler,
-  handler : ExceptionHandlerFunc
+  handler : ExceptionHandlerFunc,
 ) -> ExceptionHandler {
   { ..self, default_handler: Some(handler) }
 }
 
+///|
 /// 处理异常
 /// 
 /// 参数：
@@ -114,37 +120,34 @@ pub fn ExceptionHandler::set_default_handler(
 pub fn ExceptionHandler::handle_exception(
   self : ExceptionHandler,
   exception : ApplicationException,
-  request : @Http.HttpRequest
+  request : @Http.HttpRequest,
 ) -> @Http.HttpResponse {
   let exception_type = exception.get_type()
-  
+
   // 查找对应的处理器
   match self.handlers.get(exception_type) {
-    Some(handler) => {
+    Some(handler) =>
       // 使用注册的处理器
       handler(exception, request)
-    }
-    None => {
+    None =>
       // 使用默认处理器
       match self.default_handler {
-        Some(default_handler) => {
-          default_handler(exception, request)
-        }
-        None => {
+        Some(default_handler) => default_handler(exception, request)
+        None =>
           // 如果没有默认处理器，返回通用错误响应
           handle_exception_default(exception, request)
-        }
       }
-    }
   }
 }
 
+///|
 /// 将 HashMap 转换为 JSON 字符串
 fn hashmap_to_json(data : @hashmap.HashMap[String, String]) -> String {
   let mut json_str = "{"
   let mut first = true
-  
-  data.iter().each(fn(entry) {
+  data
+  .iter()
+  .each(fn(entry) {
     let (key, value) = entry
     if first {
       json_str = json_str + "\"" + key + "\":\"" + value + "\""
@@ -153,17 +156,17 @@ fn hashmap_to_json(data : @hashmap.HashMap[String, String]) -> String {
       json_str = json_str + ",\"" + key + "\":\"" + value + "\""
     }
   })
-  
   json_str = json_str + "}"
   json_str
 }
 
+///|
 /// 默认异常处理函数
 /// 
 /// 根据异常类型返回相应的 HTTP 响应
 fn handle_exception_default(
   exception : ApplicationException,
-  _request : @Http.HttpRequest
+  _request : @Http.HttpRequest,
 ) -> @Http.HttpResponse {
   match exception {
     NotFoundException(msg) => {
@@ -211,6 +214,7 @@ fn handle_exception_default(
   }
 }
 
+///|
 /// 创建标准异常处理器
 /// 
 /// 返回一个预配置的异常处理器，包含常见异常类型的处理
@@ -251,7 +255,5 @@ pub fn ExceptionHandler::create_default() -> ExceptionHandler {
       let json_str = hashmap_to_json(body)
       @Http.HttpResponse::internal_server_error(Some(json_str))
     })
-  
   handler
 }
-

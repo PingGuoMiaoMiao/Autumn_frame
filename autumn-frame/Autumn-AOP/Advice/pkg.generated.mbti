@@ -1,0 +1,47 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Advice"
+
+import(
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Advice {
+  name : String
+  advice_type : AdviceType
+  advice_fn : (@hashmap.HashMap[String, String], String, String, Array[String]) -> String?
+  order : Int
+}
+fn Advice::after(String, (@hashmap.HashMap[String, String], String, String, Array[String]) -> String?, Int) -> Self
+fn Advice::after_returning(String, (@hashmap.HashMap[String, String], String, String, Array[String]) -> String?, Int) -> Self
+fn Advice::after_throwing(String, (@hashmap.HashMap[String, String], String, String, Array[String]) -> String?, Int) -> Self
+fn Advice::around(String, (@hashmap.HashMap[String, String], String, String, Array[String]) -> String?, Int) -> Self
+fn Advice::before(String, (@hashmap.HashMap[String, String], String, String, Array[String]) -> String?, Int) -> Self
+fn Advice::get_advice_fn(Self) -> (@hashmap.HashMap[String, String], String, String, Array[String]) -> String?
+fn Advice::get_advice_type(Self) -> AdviceType
+fn Advice::get_name(Self) -> String
+fn Advice::get_order(Self) -> Int
+fn Advice::new(String, AdviceType, (@hashmap.HashMap[String, String], String, String, Array[String]) -> String?, Int) -> Self
+fn Advice::to_string(Self) -> String
+
+pub enum AdviceType {
+  Before
+  After
+  Around
+  AfterReturning
+  AfterThrowing
+}
+impl Eq for AdviceType
+impl Show for AdviceType
+
+// Type aliases
+pub type AdviceFn = (@hashmap.HashMap[String, String], String, String, Array[String]) -> String?
+
+pub type ApplicationContextRef = @hashmap.HashMap[String, String]
+
+// Traits
+

@@ -1,0 +1,78 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Http"
+
+import(
+  "moonbitlang/core/hashmap"
+)
+
+// Values
+
+// Errors
+
+// Types and methods
+pub enum HttpMethod {
+  GET
+  POST
+  PUT
+  DELETE
+  PATCH
+  HEAD
+  OPTIONS
+}
+fn HttpMethod::from_string(String) -> Self
+impl Eq for HttpMethod
+impl Show for HttpMethod
+
+pub struct HttpRequest {
+  http_method : HttpMethod
+  path : String
+  query_params : @hashmap.HashMap[String, String]
+  headers : @hashmap.HashMap[String, String]
+  body : String?
+}
+fn HttpRequest::extract_path_params(Self, String, String) -> @hashmap.HashMap[String, String]
+fn HttpRequest::get_body(Self) -> String?
+fn HttpRequest::get_header(Self, String) -> String?
+fn HttpRequest::get_method(Self) -> HttpMethod
+fn HttpRequest::get_path(Self) -> String
+fn HttpRequest::get_query_param(Self, String) -> String?
+fn HttpRequest::new(HttpMethod, String, @hashmap.HashMap[String, String], @hashmap.HashMap[String, String], String?) -> Self
+
+pub struct HttpResponse {
+  status_code : Int
+  headers : @hashmap.HashMap[String, String]
+  body : String?
+}
+fn HttpResponse::bad_request(String) -> Self
+fn HttpResponse::created(String) -> Self
+fn HttpResponse::forbidden(String) -> Self
+fn HttpResponse::get_body(Self) -> String?
+fn HttpResponse::get_header(Self, String) -> String?
+fn HttpResponse::get_status_code(Self) -> Int
+fn HttpResponse::internal_server_error(String?) -> Self
+fn HttpResponse::json(String) -> Self
+fn HttpResponse::new(Int, @hashmap.HashMap[String, String], String?) -> Self
+fn HttpResponse::no_content() -> Self
+fn HttpResponse::not_found(String?) -> Self
+fn HttpResponse::ok(String) -> Self
+fn HttpResponse::set_header(Self, String, String) -> Self
+fn HttpResponse::unauthorized(String) -> Self
+
+pub enum HttpStatus {
+  OK
+  Created
+  NoContent
+  BadRequest
+  Unauthorized
+  Forbidden
+  NotFound
+  InternalServerError
+}
+fn HttpStatus::get_code(Self) -> Int
+impl Eq for HttpStatus
+impl Show for HttpStatus
+
+// Type aliases
+
+// Traits
+
