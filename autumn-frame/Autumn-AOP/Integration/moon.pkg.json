@@ -1,23 +1,23 @@
 {
   "import": [
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Pointcut",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Pointcut",
       "alias": "Pointcut"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Advice",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Advice",
       "alias": "Advice"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Aspect",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Aspect",
       "alias": "Aspect"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Aspect",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Aspect",
       "alias": "AspectRegistry"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Proxy",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Proxy",
       "alias": "ProxyFactory"
     }
   ],

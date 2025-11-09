@@ -1,11 +1,11 @@
 {
   "import": [
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Pointcut",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Pointcut",
       "alias": "Pointcut"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-AOP/Advice",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-AOP/Advice",
       "alias": "Advice"
     }
   ],

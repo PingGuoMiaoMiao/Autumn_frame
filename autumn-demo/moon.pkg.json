@@ -2,22 +2,22 @@
   "is-main": true,
   "import": [
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-Ioc/ApplicationContext",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/ApplicationContext",
       "alias": "ApplicationContext"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-Boot",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Boot",
       "alias": "Boot"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-WebMVC/Dispatcher",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Dispatcher",
       "alias": "Dispatcher"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-WebMVC/Controller"
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Controller"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-WebMVC/Http",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-WebMVC/Http",
       "alias": "Http"
     }
   ],

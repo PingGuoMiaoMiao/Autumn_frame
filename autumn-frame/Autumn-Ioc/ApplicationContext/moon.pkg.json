@@ -1,15 +1,15 @@
 {
   "import": [
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-Ioc/PropertyResolver",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/PropertyResolver",
       "alias": "PropertyResolver"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-Ioc/ResourceResolver",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/ResourceResolver",
       "alias": "ResourceResolver"
     },
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-Ioc/BeanDefinition",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-Ioc/BeanDefinition",
       "alias": "BeanDefinition"
     }
   ]

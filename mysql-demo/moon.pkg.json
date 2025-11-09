@@ -2,7 +2,7 @@
   "is-main": true,
   "import": [
     {
-      "path": "username/Autumn_frame/autumn-frame/Autumn-JDBC/JdbcTemplate",
+      "path": "PingGuoMiaoMiao/Autumn_frame/autumn-frame/Autumn-JDBC/JdbcTemplate",
       "alias": "JdbcTemplate"
     }
   ],
