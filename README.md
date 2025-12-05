@@ -2,9 +2,6 @@
 
 <div align="center">
 
-**MoonBit 里的 Spring Boot 山寨版**
-
-*不卖情怀，主打一个好用*
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![MoonBit](https://img.shields.io/badge/MoonBit-0.4.34-orange.svg)](https://www.moonbitlang.com/)
